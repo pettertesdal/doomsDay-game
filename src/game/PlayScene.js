@@ -3,6 +3,15 @@ import { Scene } from "phaser";
 export class PlayScene extends Scene {
     constructor () {
         super ({ key: 'PlayScene' })
+        this.keyMap = {
+            '48': 'Sunday',    // Key code for '0'
+            '49': 'Monday',    // Key code for '1'
+            '50': 'Tuesday',   // Key code for '2'
+            '51': 'Wednesday', // Key code for '3'
+            '52': 'Thursday',  // Key code for '4'
+            '53': 'Friday',    // Key code for '5'
+            '54': 'Saturday',  // Key code for '6'
+        };
     }
 
     preload ()
@@ -20,8 +29,8 @@ export class PlayScene extends Scene {
         this.timerText = this.add.text(10, 10, 'Time: 120', { fontSize: '32px', fill: '#FFF' });
         this.scoreText = this.add.text(10, 50, 'score: 0', { fontSize: '32px', fill: '#FFF' });
 
-        this.currentDate = this.generateRandomDate();
-        this.dateText = this.add.text(100, 100, this.currentDate.getDate() + "." + this.currentDate.getMonth() + "." + this.currentDate.getFullYear(), { fontSize: '32px', fill: '#FFF' });
+        this.currentDateString = this.generateRandomDate();
+        this.dateText = this.add.text(100, 100, this.currentDateString, { fontSize: '32px', fill: '#FFF' });
 
         this.createDayButtons();
 
@@ -31,6 +40,21 @@ export class PlayScene extends Scene {
             callbackScope: this,
             loop: true
         });
+
+        this.input.keyboard.on('keydown', (event) => {
+            if (this.keyMap[event.keyCode]) {
+                this.checkAnswers(this.keyMap[event.keyCode]);
+                console.log("pressed " + this.keyMap[event.keyCode])
+            }
+        })
+        this.input.keyboard.on('keydown_ZERO', () => this.checkAnswers('Sunday'));
+        this.input.keyboard.on('keydown_ONE', () => this.checkAnswers('Monday'));
+        this.input.keyboard.on('keydown_TWO', () => this.checkAnswers('Tuesday'));
+        this.input.keyboard.on('keydown_THREE', () => this.checkAnswers('Wedensday'));
+        this.input.keyboard.on('keydown_FOUR', () => this.checkAnswers('Thursday'));
+        this.input.keyboard.on('keydown_FIVE', () => this.checkAnswers('Friday'));
+        this.input.keyboard.on('keydown_SIX', () => this.checkAnswers('Saturday'));
+        
     }
     
     updateTimer() {
@@ -46,11 +70,12 @@ export class PlayScene extends Scene {
 
     generateRandomDate() {
         // For now it only generates for this year
+        let today = new Date()
         let year;
         
         switch (this.difficulty) {
             case 0:
-                year = Phaser.Math.Between(2000, 2099);
+                year = today.getFullYear();
                 break;
             case 1:
                 year = Phaser.Math.Between(1900, 2099);
@@ -62,8 +87,9 @@ export class PlayScene extends Scene {
 
         let month = Phaser.Math.Between(0, 11);
         let day = Phaser.Math.Between(1, 31);
-        return new Date(year, month, day);
-
+        this.currentDate = new Date(year, month, day);
+        month++ 
+        return (day + "." + month + "." + year)
     }
 
     createDayButtons() {
@@ -81,12 +107,15 @@ export class PlayScene extends Scene {
             this.score += 10;
             this.scoreText.setText('Score: ' + this.score);
         }
-        this.currentDate = this.generateRandomDate();
-        this.dateText.setText(this.currentDate.getDate() + "." + this.currentDate.getMonth() + "." + this.currentDate.getFullYear());
+        this.currentDateString = this.generateRandomDate();
+        this.dateText.setText(this.currentDateString);
+        console.log(correctDay)
     }
 
     calculateDoomsdayAlgorithm(date) {
+        console.log(date)
         let day = date.getDay();
+        console.log(day)
         let weekday = "";
         switch (day) {
             case 0:

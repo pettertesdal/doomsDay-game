@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue"
+import { onMounted, ref } from "vue"
 import { launch } from '../game/game.js';
 
 const showButton = ref(true);
@@ -10,6 +10,9 @@ function handleClickStart() {
     launch();
 }
 
+onMounted(() => {
+    handleClickStart()
+})
 </script>
 <template>
     <div id="game">
