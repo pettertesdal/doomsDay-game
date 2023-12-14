@@ -11,10 +11,11 @@ export class PlayScene extends Scene {
         this.load.image('logo', 'assets/logo.svg');
 
     }
-    create () {
+    create (data) {
         //this.add.text(100, 100, 'PlayScene', { font: "24px Courier", fill: "#ffffff", });
         this.score = 0;
         this.timeLeft = 120;
+        this.difficulty = data.difficulty;
 
         this.timerText = this.add.text(10, 10, 'Time: 120', { fontSize: '32px', fill: '#FFF' });
         this.scoreText = this.add.text(10, 50, 'score: 0', { fontSize: '32px', fill: '#FFF' });
@@ -45,10 +46,23 @@ export class PlayScene extends Scene {
 
     generateRandomDate() {
         // For now it only generates for this year
-        let year = new Date().getFullYear();
+        let year;
+        
+        switch (this.difficulty) {
+            case 0:
+                year = Phaser.Math.Between(2000, 2099);
+                break;
+            case 1:
+                year = Phaser.Math.Between(1900, 2099);
+                break;
+            case 2:
+                year = Phaser.Math.Between(1000, 2099);
+                break;
+        }
+
         let month = Phaser.Math.Between(0, 11);
         let day = Phaser.Math.Between(1, 31);
-        return new Date(day, month, year);
+        return new Date(year, month, day);
 
     }
 

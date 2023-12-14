@@ -17,4 +17,8 @@ function handleClickStart() {
     </div>
 </template>
 <style scoped>
+#game {
+    height: 100vh;
+    width: 100%
+}
 </style>

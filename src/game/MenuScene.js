@@ -16,13 +16,13 @@ export class MenuScene extends Scene {
         this.add.text(100, 140, 'Choose a difficulty', { font: "24px Courier", fill: "#ffffff", });
         let easyButton = this.add.text(100, 200, "Easy", { fontSize: '24px', fill: '#0F0' })
         .setInteractive()
-        .on('pointerdown', () => this.scene.start("PlayScene"));
+        .on('pointerdown', () => this.scene.start("PlayScene", { difficulty: 0 }));
         let mediumButton = this.add.text(100, 240, "Medium", { fontSize: '24px', fill: '#0F0' })
         .setInteractive()
-        .on('pointerdown', () => this.scene.start("PlayScene"));
+        .on('pointerdown', () => this.scene.start("PlayScene", { difficulty: 1 }));
         let hardButton = this.add.text(100, 280, "Hard", { fontSize: '24px', fill: '#0F0' })
         .setInteractive()
-        .on('pointerdown', () => this.scene.start("PlayScene"));
+        .on('pointerdown', () => this.scene.start("PlayScene", { difficulty: 2}));
     }
     
     updateTimer() {
