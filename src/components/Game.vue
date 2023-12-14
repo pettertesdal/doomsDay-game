@@ -3,7 +3,7 @@ import {onUnmounted, ref} from "vue"
 
 const initialTime = 60;
 const timeLeft = ref(initialTime);
-const timer = ref(null);
+var timer = ref(null);
 
 function startTime() {
     clearInterval(timer.value);
