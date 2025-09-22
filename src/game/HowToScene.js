@@ -6,22 +6,16 @@ export class HowToScene extends Scene {
     }
 
     preload() {
-        // Make sure the pixel font is loaded
         this.load.bitmapFont('PixelGame', 'assets/fonts/PixelGame.png', 'assets/fonts/PixelGame.xml');
     }
 
     create() {
-        // Bone-paper background
         this.cameras.main.setBackgroundColor(0xEDE6D1);
 
-        // Title
-        const title = this.add.bitmapText(
-            this.scale.width / 2,
-            50,
-            'PixelGame',
-            'HOW TO PLAY',
-            64
-        ).setOrigin(0.5).setAlpha(0).setScale(4);
+        const title = this.add.bitmapText(this.scale.width / 2, 50, 'PixelGame', 'HOW TO PLAY', 64)
+            .setOrigin(0.5)
+            .setAlpha(0)
+            .setScale(4);
 
         this.tweens.add({
             targets: title,
@@ -31,7 +25,6 @@ export class HowToScene extends Scene {
             ease: 'Back.Out'
         });
 
-        // Instructions
         const instructions = [
             "1. The Doomsday Algorithm helps",
             "   you find the weekday of any date.",
@@ -43,9 +36,7 @@ export class HowToScene extends Scene {
             "   d) Add anchor day of the century.",
             "   e) Mod 7 → number represents the weekday.",
             "",
-            "3. Practice by typing the correct",
-            "   weekday for each given date.",
-            "",
+            "3. Example:",
             "Press ENTER to go back to menu."
         ];
 
@@ -54,7 +45,6 @@ export class HowToScene extends Scene {
             const txt = this.add.bitmapText(50, startY + i * 40, 'PixelGame', line, 24)
                 .setAlpha(0);
 
-            // Fade-in each line
             this.tweens.add({
                 targets: txt,
                 alpha: 1,
@@ -64,15 +54,30 @@ export class HowToScene extends Scene {
             });
         });
 
-        // Input to go back
-        this.input.keyboard.on('keydown-ENTER', () => {
-            this.scene.start('MenuScene');
+        // Animated example calculation
+        const exampleDate = "March 14, 2025 → Friday";
+        const exampleText = this.add.bitmapText(80, startY + instructions.length * 40 + 20, 'PixelGame', '', 28)
+            .setAlpha(0);
+
+        this.tweens.add({
+            targets: exampleText,
+            alpha: 1,
+            duration: 500,
+            delay: instructions.length * 150,
         });
 
-        // Optional clickable button
+        this.time.addEvent({
+            delay: 100,
+            repeat: exampleDate.length - 1,
+            callback: () => {
+                exampleText.text += exampleDate[exampleText.text.length];
+            }
+        });
+
+        // Back to Menu button
         const menuButton = this.add.bitmapText(
             this.scale.width / 2,
-            startY + instructions.length * 40 + 50,
+            startY + instructions.length * 40 + 100,
             'PixelGame',
             'Back to Menu',
             32
@@ -84,7 +89,7 @@ export class HowToScene extends Scene {
             targets: menuButton,
             alpha: 1,
             duration: 1000,
-            delay: instructions.length * 150,
+            delay: instructions.length * 150 + exampleDate.length * 100,
             ease: 'Power2'
         });
 
@@ -99,6 +104,40 @@ export class HowToScene extends Scene {
         });
 
         menuButton.on('pointerdown', () => this.scene.start('MenuScene'));
+
+        // Tutorial button
+        const tutorialButton = this.add.bitmapText(
+            this.scale.width / 2,
+            startY + instructions.length * 40 + 160,
+            'PixelGame',
+            'Step-by-Step Tutorial',
+            32
+        ).setOrigin(0.5)
+          .setAlpha(0)
+          .setInteractive({ useHandCursor: true });
+
+        this.tweens.add({
+            targets: tutorialButton,
+            alpha: 1,
+            duration: 1000,
+            delay: instructions.length * 150 + exampleDate.length * 100 + 200,
+            ease: 'Power2'
+        });
+
+        tutorialButton.on('pointerover', () => {
+            tutorialButton.setTint(0x00ff00);
+            this.tweens.add({ targets: tutorialButton, scale: 1.2, duration: 100, ease: 'Power1' });
+        });
+
+        tutorialButton.on('pointerout', () => {
+            tutorialButton.clearTint();
+            this.tweens.add({ targets: tutorialButton, scale: 1, duration: 100, ease: 'Power1' });
+        });
+
+        tutorialButton.on('pointerdown', () => this.scene.start('TutorialScene'));
+
+        // Allow Enter key to go back
+        this.input.keyboard.on('keydown-ENTER', () => this.scene.start('MenuScene'));
     }
 }
 

@@ -3,6 +3,7 @@ import { PlayScene } from "../game/PlayScene.js";
 import { EndScene } from "../game/EndScene.js";
 import { HowToScene } from "../game/HowToScene.js";
 import { MenuScene } from "../game/MenuScene.js";
+import { TutorialScene } from "../game/TutorialScene.js";
 
 export function launch() {
     return new Game ({
@@ -18,6 +19,6 @@ export function launch() {
         physics: {
             default: "arcade",
         },
-        scene: [MenuScene, PlayScene, EndScene]
+        scene: [MenuScene, PlayScene, EndScene, HowToScene, TutorialScene]
     });
 }
