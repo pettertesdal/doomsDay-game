@@ -2,38 +2,37 @@ import { Scene } from "phaser";
 
 export class PlayScene extends Scene {
     constructor () {
-        super ({ key: 'PlayScene' })
-        this.keyMap = {
-            '48': 'Sunday',    // Key code for '0'
-            '49': 'Monday',    // Key code for '1'
-            '50': 'Tuesday',   // Key code for '2'
-            '51': 'Wednesday', // Key code for '3'
-            '52': 'Thursday',  // Key code for '4'
-            '53': 'Friday',    // Key code for '5'
-            '54': 'Saturday',  // Key code for '6'
-        };
+        super({ key: 'PlayScene' });
+        this.maxMistakes = 3;
     }
 
-    preload ()
-
-    {
-        this.load.image('logo', 'assets/logo.svg');
-
+    preload () {
+        this.load.bitmapFont('PixelGame', 'assets/fonts/PixelGame.png', 'assets/fonts/PixelGame.xml');
     }
-    create (data) {
-        //this.add.text(100, 100, 'PlayScene', { font: "24px Courier", fill: "#ffffff", });
+
+    create(data) {
+        this.cameras.main.setBackgroundColor(0xEDE6D1);
+
         this.score = 0;
+        this.mistakes = 0;
         this.timeLeft = 120;
         this.difficulty = data.difficulty;
 
-        this.timerText = this.add.text(10, 10, 'Time: 120', { fontSize: '32px', fill: '#FFF' });
-        this.scoreText = this.add.text(10, 50, 'score: 0', { fontSize: '32px', fill: '#FFF' });
+        // Score, mistakes, timer
+        this.scoreText = this.add.bitmapText(10, 10, 'PixelGame', 'Score: 0', 24);
+        this.mistakesText = this.add.bitmapText(10, 50, 'PixelGame', 'Mistakes: 0', 24);
+        this.timerText = this.add.bitmapText(10, 90, 'PixelGame', 'Time: ' + this.timeLeft, 24);
 
+        // Current date
         this.currentDateString = this.generateRandomDate();
-        this.dateText = this.add.text(100, 100, this.currentDateString, { fontSize: '32px', fill: '#FFF' });
+        this.dateText = this.add.bitmapText(this.scale.width / 2, 150, 'PixelGame', this.currentDateString, 48)
+            .setOrigin(0.5);
 
-        this.createDayButtons();
+        // Player input
+        this.inputText = this.add.bitmapText(this.scale.width / 2, 250, 'PixelGame', '', 32).setOrigin(0.5);
+        this.inputString = '';
 
+        // Timer
         this.timer = this.time.addEvent({
             delay: 1000,
             callback: this.updateTimer,
@@ -41,38 +40,64 @@ export class PlayScene extends Scene {
             loop: true
         });
 
+        // Keyboard input
         this.input.keyboard.on('keydown', (event) => {
-            if (this.keyMap[event.keyCode]) {
-                this.checkAnswers(this.keyMap[event.keyCode]);
-                console.log("pressed " + this.keyMap[event.keyCode])
+            if (event.key.length === 1) {
+                // Add letter
+                this.inputString += event.key;
+                this.inputText.setText(this.inputString);
+            } else if (event.key === 'Backspace') {
+                this.inputString = this.inputString.slice(0, -1);
+                this.inputText.setText(this.inputString);
+            } else if (event.key === 'Enter') {
+                this.checkAnswer();
             }
-        })
-        this.input.keyboard.on('keydown_ZERO', () => this.checkAnswers('Sunday'));
-        this.input.keyboard.on('keydown_ONE', () => this.checkAnswers('Monday'));
-        this.input.keyboard.on('keydown_TWO', () => this.checkAnswers('Tuesday'));
-        this.input.keyboard.on('keydown_THREE', () => this.checkAnswers('Wedensday'));
-        this.input.keyboard.on('keydown_FOUR', () => this.checkAnswers('Thursday'));
-        this.input.keyboard.on('keydown_FIVE', () => this.checkAnswers('Friday'));
-        this.input.keyboard.on('keydown_SIX', () => this.checkAnswers('Saturday'));
-        
+        });
     }
-    
+
+    checkAnswer() {
+        const correctDay = this.calculateDoomsdayAlgorithm(this.currentDate);
+
+        if (this.inputString.toLowerCase() === correctDay.toLowerCase()) {
+            this.score += 10;
+            this.scoreText.setText('Score: ' + this.score);
+            this.tweens.add({ targets: this.scoreText, scale: { from: 1.2, to: 1 }, duration: 200, ease: 'Back.Out' });
+        } else {
+            this.mistakes++;
+            this.mistakesText.setText('Mistakes: ' + this.mistakes);
+            this.tweens.add({ targets: this.mistakesText, scale: { from: 1.2, to: 1 }, duration: 200, ease: 'Back.Out' });
+
+            if (this.mistakes >= this.maxMistakes) {
+                this.scene.start('EndScene', { score: this.score });
+                return;
+            }
+        }
+
+        // Reset input and generate new date
+        this.inputString = '';
+        this.inputText.setText('');
+        this.currentDateString = this.generateRandomDate();
+        this.dateText.setText(this.currentDateString);
+    }
+
     updateTimer() {
         this.timeLeft--;
         this.timerText.setText('Time: ' + this.timeLeft);
 
+        if (this.timeLeft <= 10) {
+            this.tweens.add({ targets: this.timerText, alpha: 0.3, yoyo: true, repeat: 3, duration: 200 });
+        }
+
         if (this.timeLeft <= 0) {
             this.timer.remove(false);
-
             this.scene.start('EndScene', { score: this.score });
         }
     }
 
     generateRandomDate() {
-        // For now it only generates for this year
-        let today = new Date()
+        let today = new Date();
         let year;
-        
+
         switch (this.difficulty) {
             case 0:
                 year = today.getFullYear();
@@ -88,58 +113,13 @@ export class PlayScene extends Scene {
         let month = Phaser.Math.Between(0, 11);
         let day = Phaser.Math.Between(1, 31);
         this.currentDate = new Date(year, month, day);
-        month++ 
-        return (day + "." + month + "." + year)
-    }
-
-    createDayButtons() {
-        const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wedensday', 'Thursday', 'Friday', 'Saturday'];
-        daysOfWeek.forEach((day, index) => {
-            let button = this.add.text(100, 200 + (index * 40), day, { fontSize: '24px', fill: '#0F0' })
-            .setInteractive()
-            .on('pointerdown', () => this.checkAnswers(day));
-        });
-    }
-
-    checkAnswers(selectedDay) {
-        let correctDay = this.calculateDoomsdayAlgorithm(this.currentDate);
-        if (selectedDay == correctDay) {
-            this.score += 10;
-            this.scoreText.setText('Score: ' + this.score);
-        }
-        this.currentDateString = this.generateRandomDate();
-        this.dateText.setText(this.currentDateString);
-        console.log(correctDay)
+        month++;
+        return day + "." + month + "." + year;
     }
 
     calculateDoomsdayAlgorithm(date) {
-        console.log(date)
-        let day = date.getDay();
-        console.log(day)
-        let weekday = "";
-        switch (day) {
-            case 0:
-                weekday = "Sunday";
-                break;
-            case 1:
-                weekday = "Monday";
-                break;
-            case 2:
-                weekday = "Tuesday";
-                break;
-            case 3:
-                weekday = "Wedensday";
-                break;
-            case 4:
-                weekday = "Thursday";
-                break;
-            case 5:
-                weekday = "Friday";
-                break;
-            case 6:
-                weekday = "Saturday";
-                break;
-        }
-        return weekday
+        const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        return weekdays[date.getDay()];
     }
 }
+

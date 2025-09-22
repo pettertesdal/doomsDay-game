@@ -1,6 +1,7 @@
 import { Game, AUTO, Scale, Scene } from "phaser";
 import { PlayScene } from "../game/PlayScene.js";
 import { EndScene } from "../game/EndScene.js";
+import { HowToScene } from "../game/HowToScene.js";
 import { MenuScene } from "../game/MenuScene.js";
 
 export function launch() {
@@ -13,7 +14,7 @@ export function launch() {
             height: window.innerHeight * window.devicePixelRatio,
         },
         parent: "game",
-        backgroundColor: '#201726',
+        backgroundColor: '0xEDE6D1',
         physics: {
             default: "arcade",
         },

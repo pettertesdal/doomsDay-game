@@ -1,95 +1,89 @@
 import { Scene } from "phaser";
 
 export class MenuScene extends Scene {
-    constructor () {
-        super ({ key: 'MenuScene' })
-    }
+  constructor () {
+    super({ key: 'MenuScene' });
+  }
 
-    preload ()
+  preload () {
+    this.load.bitmapFont(
+      'PixelGame',                 // key you’ll use later
+      'assets/fonts/PixelGame.png', // path to PNG
+      'assets/fonts/PixelGame.xml'  // or .fnt / .json file
+    );
+  }
 
-    {
-        this.load.image('logo', 'assets/logo.svg');
 
-    }
-    create () {
-        this.add.text(100, 100, 'Welcome to doomsday!', { font: "24px Courier", fill: "#ffffff", });
-        this.add.text(100, 140, 'Choose a difficulty', { font: "24px Courier", fill: "#ffffff", });
-        let easyButton = this.add.text(100, 200, "Easy", { fontSize: '24px', fill: '#0F0' })
-        .setInteractive()
-        .on('pointerdown', () => this.scene.start("PlayScene", { difficulty: 0 }));
-        let mediumButton = this.add.text(100, 240, "Medium", { fontSize: '24px', fill: '#0F0' })
-        .setInteractive()
-        .on('pointerdown', () => this.scene.start("PlayScene", { difficulty: 1 }));
-        let hardButton = this.add.text(100, 280, "Hard", { fontSize: '24px', fill: '#0F0' })
-        .setInteractive()
-        .on('pointerdown', () => this.scene.start("PlayScene", { difficulty: 2}));
-    }
-    
-    updateTimer() {
-        this.timeLeft--;
-        this.timerText.setText('Time: ' + this.timeLeft);
+  create () {
+    // --- Step 1: Big animated title ---
+    const title = this.add.bitmapText(
+      this.scale.width / 2, 
+      this.scale.height / 2, 
+      'PixelGame', 
+      'DOOMSDAY', 
+      64
+    ).setOrigin(0.5)
+    .setAlpha(0)
+    .setScale(4); // start large for a zoom-in effect
 
-        if (this.timeLeft <= 0) {
-            this.timer.remove(false);
-
-            this.scene.start('EndScene', { score: this.score });
-        }
-    }
-
-    generateRandomDate() {
-        // For now it only generates for this year
-        let year = new Date().getFullYear();
-        let month = Phaser.Math.Between(0, 11);
-        let day = Phaser.Math.Between(1, 31);
-        return new Date(day, month, year);
-
-    }
-
-    createDayButtons() {
-        const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wedensday', 'Thursday', 'Friday', 'Saturday'];
-        daysOfWeek.forEach((day, index) => {
-            let button = this.add.text(100, 200 + (index * 40), day, { fontSize: '24px', fill: '#0F0' })
-            .setInteractive()
-            .on('pointerdown', () => this.checkAnswers(day));
+    // Animate title in
+    this.tweens.add({
+      targets: title,
+      alpha: 1,
+      scale: 1,
+      duration: 1500,
+      ease: 'Back.Out',
+      onComplete: () => {
+        // After a pause, fade out and show menu
+        this.time.delayedCall(1000, () => {
+          this.tweens.add({
+            targets: title,
+            alpha: 0,
+            duration: 800,
+            onComplete: () => this.showMenu()
+          });
         });
-    }
+      }
+    });
+  }
 
-    checkAnswers(selectedDay) {
-        let correctDay = this.calculateDoomsdayAlgorithm(this.currentDate);
-        if (selectedDay == correctDay) {
-            this.score += 10;
-            this.scoreText.setText('Score: ' + this.score);
-        }
-        this.currentDate = this.generateRandomDate();
-        this.dateText.setText(this.currentDate.getDate() + "." + this.currentDate.getMonth() + "." + this.currentDate.getFullYear());
-    }
+  showMenu () {
+    // --- Step 2: Animated menu options ---
+    const items = [
+      { text: "Welcome to Doomsday!", y: 100, size: 24 },
+      { text: "Choose a difficulty", y: 140, size: 24 },
+      { text: "Easy", y: 200, size: 24, callback: () => this.scene.start("PlayScene", { difficulty: 0 }) },
+      { text: "Medium", y: 240, size: 24, callback: () => this.scene.start("PlayScene", { difficulty: 1 }) },
+      { text: "Hard", y: 280, size: 24, callback: () => this.scene.start("PlayScene", { difficulty: 2 }) },
+      { text: "How to play", y: 320, size: 24, callback: () => this.scene.start("HowToScene")}
+    ];
 
-    calculateDoomsdayAlgorithm(date) {
-        let day = date.getDay();
-        let weekday = "";
-        switch (day) {
-            case 0:
-                weekday = "Sunday";
-                break;
-            case 1:
-                weekday = "Monday";
-                break;
-            case 2:
-                weekday = "Tuesday";
-                break;
-            case 3:
-                weekday = "Wedensday";
-                break;
-            case 4:
-                weekday = "Thursday";
-                break;
-            case 5:
-                weekday = "Friday";
-                break;
-            case 6:
-                weekday = "Saturday";
-                break;
-        }
-        return weekday
-    }
+    items.forEach((item, i) => {
+      const txt = this.add.bitmapText(
+        100,
+        item.y,
+        'PixelGame',
+        item.text,
+        item.size
+      ).setAlpha(0);
+
+      // Animate each line in sequence
+      this.tweens.add({
+        targets: txt,
+        alpha: 1,
+        x: 120,
+        duration: 500,
+        delay: i * 200,
+        ease: 'Power2'
+      });
+
+      if (item.callback) {
+        txt.setInteractive({ useHandCursor: true })
+          .on('pointerdown', item.callback)
+          .on('pointerover', () => txt.setTint(0x00ff00))
+          .on('pointerout', () => txt.clearTint());
+      }
+    });
+  }
 }
+
