@@ -28,15 +28,19 @@ export class HowToScene extends Scene {
         const instructions = [
             "1. The Doomsday Algorithm helps",
             "   you find the weekday of any date.",
+            "   Before starting it may be useful to think of the days in numbers",
+            "   Sunday-0, Monday-1, Tuesday-2, Wedensday-3",
+            "   Thuesday-4, Friday-5, Saturday-6",
             "",
             "2. Steps to calculate:",
-            "   a) Take the last two digits of the year.",
-            "   b) Divide by 12 → quotient + remainder.",
-            "   c) Divide remainder by 4 → add quotient + remainder + result.",
-            "   d) Add anchor day of the century.",
-            "   e) Mod 7 → number represents the weekday.",
+            "   a) How many times does the number 12 fit as a whole into the two last digits of the year number?",
+            "   b) What is the difference between the two last digits of the year number and the product of the multiples of 12 from calculation a?",
+            "   c) How many times does the number 4 fit into the result of calculation b?",
+            "   d) What is the century's anchor day?",
+            "   e) Add up all the results.",
+            "   f) Subtract whole multiples of 7 from the result of calculation 5.",
+            "   This will result in a number between 0 and 6, which corresponds to the doomsday of the year.",
             "",
-            "3. Example:",
             "Press ENTER to go back to menu."
         ];
 
