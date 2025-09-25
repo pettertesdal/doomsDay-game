@@ -15,6 +15,11 @@ export class TutorialScene extends Scene {
       "assets/fonts/PixelGame.png",
       "assets/fonts/PixelGame.xml"
     );
+    this.load.bitmapFont(
+      "pixel",
+      "assets/fonts/pixel.png",
+      "assets/fonts/pixel.xml"
+    );
   }
 
   create() {
@@ -22,10 +27,10 @@ export class TutorialScene extends Scene {
 
     // Title
     const title = this.add
-      .bitmapText(this.scale.width / 2, 50, "PixelGame", "DOOMSDAY TUTORIAL", 64)
-      .setOrigin(0.5)
-      .setAlpha(0)
-      .setScale(4);
+    .bitmapText(this.scale.width / 2, 50, "PixelGame", "DOOMSDAY TUTORIAL", 64)
+    .setOrigin(0.5)
+    .setAlpha(0)
+    .setScale(4);
     this.tweens.add({
       targets: title,
       alpha: 1,
@@ -53,10 +58,10 @@ export class TutorialScene extends Scene {
 
     // Blackboard formulas
     this.formulaText = this.add
-      .bitmapText(this.scale.width / 2, 350, "PixelGame", "(fit12 + remainder + fit4 + anchor) mod 7 = Doomsday", 24)
+      .bitmapText(this.scale.width / 2, 350, "pixel", "(fit12 + remainder + fit4 + anchor) mod 7 = Doomsday", 24)
       .setOrigin(0.5);
-    this.calcText = this.add.bitmapText(this.scale.width / 2, 390, "PixelGame", "", 24).setOrigin(0.5);
-    this.calcDayText = this.add.bitmapText(this.scale.width / 2, 430, "PixelGame", "", 24).setOrigin(0.5);
+    this.calcText = this.add.bitmapText(this.scale.width / 2, 390, "pixel", "", 24).setOrigin(0.5);
+    this.calcDayText = this.add.bitmapText(this.scale.width / 2, 430, "pixel", "", 24).setOrigin(0.5);
 
     // Cheat sheet panel (offscreen)
     this.createCheatSheet();
@@ -79,7 +84,7 @@ export class TutorialScene extends Scene {
       }
     });
 
-        // Hidden input for mobile
+    // Hidden input for mobile
     this.hiddenInput = document.createElement('input');
     this.hiddenInput.type = 'text';
     this.hiddenInput.style.position = 'absolute';
@@ -105,11 +110,12 @@ export class TutorialScene extends Scene {
     });
 
     // When scene starts, focus the input
-    this.input.on('pointerdown', () => {
-      this.hiddenInput.focus();
-    });
-
-
+    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      this.input.on("pointerdown", () => {
+        this.hiddenInput.focus();
+      });
+    }
 
     // Back to Menu button
     this.menuButton = this.add
@@ -247,7 +253,7 @@ export class TutorialScene extends Scene {
 
   createCheatSheet() {
     const panelWidth = 250;
-    const panelHeight = 300;
+    const panelHeight = 400;
 
     this.cheatPanel = this.add.container(this.scale.width, 100);
 

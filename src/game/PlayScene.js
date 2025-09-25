@@ -8,6 +8,7 @@ export class PlayScene extends Scene {
 
   preload () {
     this.load.bitmapFont('PixelGame', 'assets/fonts/PixelGame.png', 'assets/fonts/PixelGame.xml');
+    this.load.bitmapFont('pixel', 'assets/fonts/pixel.png', 'assets/fonts/pixel.xml');
   }
 
   create(data) {
@@ -25,11 +26,11 @@ export class PlayScene extends Scene {
 
     // Current date
     this.currentDateString = this.generateRandomDate();
-    this.dateText = this.add.bitmapText(this.scale.width / 2, 150, 'PixelGame', this.currentDateString, 48)
+    this.dateText = this.add.bitmapText(this.scale.width / 2, 150, 'pixel', this.currentDateString, 48)
       .setOrigin(0.5);
 
     // Player input
-    this.inputText = this.add.bitmapText(this.scale.width / 2, 250, 'PixelGame', '', 32).setOrigin(0.5);
+    this.inputText = this.add.bitmapText(this.scale.width / 2, 250, 'pixel', '', 32).setOrigin(0.5);
     this.inputString = '';
 
     // Timer
@@ -79,10 +80,12 @@ export class PlayScene extends Scene {
       }
     });
 
-    // When scene starts, focus the input
-    this.input.on('pointerdown', () => {
-      this.hiddenInput.focus();
-    });
+    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      this.input.on("pointerdown", () => {
+        this.hiddenInput.focus();
+      });
+    }
 
   }
 
