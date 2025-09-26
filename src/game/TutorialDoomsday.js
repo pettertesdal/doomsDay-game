@@ -12,9 +12,9 @@ export class TutorialDoomsday extends Scene {
       "assets/fonts/PixelGame.xml"
     );
     this.load.bitmapFont(
-      "pixel",
-      "assets/fonts/pixel.png",
-      "assets/fonts/pixel.xml"
+      "ari",
+      "assets/fonts/ari-font.png",
+      "assets/fonts/ari-font.xml"
     );
   }
 
@@ -67,26 +67,26 @@ export class TutorialDoomsday extends Scene {
       .bitmapText(
         this.scale.width / 2,
         120,
-        "PixelGame",
+        "ari",
         `Example Date: ${this.exampleDay}.${this.exampleMonth}.${this.exampleYear}`,
         28
       )
       .setOrigin(0.5);
 
     // Instruction + input + feedback
-    this.instructionText = this.add.bitmapText(50, 150, "PixelGame", "", 28);
+    this.instructionText = this.add.bitmapText(50, 150, "ari", "", 28);
     this.inputText = this.add
-      .bitmapText(this.scale.width / 2, 220, "PixelGame", "", 32)
+      .bitmapText(this.scale.width / 2, 220, "ari", "", 32)
       .setOrigin(0.5);
     this.feedbackText = this.add
-      .bitmapText(this.scale.width / 2, 270, "PixelGame", "", 28)
+      .bitmapText(this.scale.width / 2, 270, "ari", "", 28)
       .setOrigin(0.5);
 
     this.calcText = this.add
-      .bitmapText(this.scale.width / 2, 390, "pixel", "", 24)
+      .bitmapText(this.scale.width / 2, 390, "ari", "", 24)
       .setOrigin(0.5);
     this.calcDayText = this.add
-      .bitmapText(this.scale.width / 2, 430, "pixel", "", 24)
+      .bitmapText(this.scale.width / 2, 430, "ari", "", 24)
       .setOrigin(0.5);
 
     // Cheat sheet panel (offscreen)
@@ -173,7 +173,7 @@ export class TutorialDoomsday extends Scene {
       {
         text: () => `Step 3: Divide the remainder (${this.remainder}) by 4`,
         check: () => this.playerInput === String(this.div4),
-        success: "✅ Nice! Next, add the century anchor day.",
+        success: "✅ Nice!",
         onSuccess: (val) => (this.calculationParts[2] = val),
       },
       {
@@ -185,7 +185,7 @@ export class TutorialDoomsday extends Scene {
       {
         text: () => `Step 5: Add them all together. What total do you get?`,
         check: () => this.playerInput === String(this.total),
-        success: "✅ Correctomundo",
+        success: "✅ Correct!",
         onSuccess: (val) => (this.calculationParts[5] = "mod 7("+val+")"),
       },
       {
@@ -251,25 +251,80 @@ this.calculationParts[5] || "Doomsday"
 
   // --- Cheat sheet UI unchanged ---
   createCheatSheet() {
-    const panelWidth = 250;
-    const panelHeight = 400;
+    const panelWidth = 320;
+    const panelHeight = 460;
 
-    this.cheatPanel = this.add.container(this.scale.width, 100);
+    this.cheatPanel = this.add.container(this.scale.width, 80);
 
+    // Background
     const bg = this.add.graphics();
     bg.fillStyle(0xffffcc, 1);
     bg.fillRoundedRect(0, 0, panelWidth, panelHeight, 10);
     this.cheatPanel.add(bg);
 
-    const text = this.add.bitmapText(
-      10,
-      10,
-      "PixelGame",
-      "Month Doomsdays:\nJan:3\nFeb:28\nMar:14\nApr:4\nMay:9\nJun:6\nJul:11\nAug:8\nSep:5\nOct:10\nNov:7\nDec:12\n\nCentury Anchors:\n1900s:3\n2000s:2\n2100s:0",
-      18
+    // --- Month Doomsdays ---
+    const monthText =
+      "Month Doomsdays\n" +
+        "Jan: 3 / 4*   Jul:11\n" +
+        "Feb:28 / 29*  Aug: 8\n" +
+        "Mar:14        Sep: 5\n" +
+        "Apr: 4        Oct:10\n" +
+        "May: 9        Nov: 7\n" +
+        "Jun: 6        Dec:12";
+    this.cheatPanel.add(
+      this.add.bitmapText(15, 15, "ari", monthText, 18)
     );
-    this.cheatPanel.add(text);
 
+    // --- Leap year rule ---
+    const leapText =
+      "* Leap Year Rule:\n" +
+        "Divisible by 4 → Leap Year\n" +
+        "But divisible by 100 → NOT\n" +
+        "Except divisible by 400 → Leap\n" +
+        "\nEffect: Jan=4, Feb=29";
+    this.cheatPanel.add(
+      this.add.bitmapText(15, 160, "ari", leapText, 16)
+    );
+
+    // --- Century Anchors ---
+    const anchorText =
+      "Century Anchors\n" +
+        "1900s → 3 (Wed)\n" +
+        "2000s → 2 (Tue)\n" +
+        "2100s → 0 (Sun)";
+    this.cheatPanel.add(
+      this.add.bitmapText(15, 270, "ari", anchorText, 18)
+    );
+
+    // --- Weekday Numbers ---
+    const weekdayText =
+      "Weekday Numbers\n" +
+        "0 = Sun   1 = Mon\n" +
+        "2 = Tue   3 = Wed\n" +
+        "4 = Thu   5 = Fri\n" +
+        "6 = Sat";
+    this.cheatPanel.add(
+      this.add.bitmapText(15, 360, "ari", weekdayText, 18)
+    );
+
+    // --- Close button (top-right) ---
+    const closeBtn = this.add.bitmapText(panelWidth - 25, 10, "ari", "X", 20)
+    .setOrigin(0.5, 0)
+    .setTint(0xaa0000)
+    .setInteractive({ useHandCursor: true });
+    closeBtn.on("pointerdown", () => {
+      this.tweens.add({
+        targets: this.cheatPanel,
+        x: this.scale.width,
+        duration: 300,
+        ease: "Power2",
+      });
+      this.arrow.setVisible(true);
+      this.cheatLabel.setVisible(true);
+    });
+    this.cheatPanel.add(closeBtn);
+
+    // --- Arrow to open ---
     const arrowX = this.scale.width - 50;
     const arrowY = 200;
     this.arrow = this.add.graphics();
@@ -288,6 +343,7 @@ this.calculationParts[5] || "Doomsday"
       .setOrigin(1, 0.5)
       .setAngle(-15);
 
+    // Arrow opens sheet
     this.arrow.setInteractive(
       new Phaser.Geom.Polygon([0, -20, 0, 20, 30, 0]),
       Phaser.Geom.Polygon.Contains
@@ -302,22 +358,7 @@ this.calculationParts[5] || "Doomsday"
         ease: "Power2",
       });
     });
-
-    this.cheatPanel.setSize(panelWidth, panelHeight);
-    this.cheatPanel.setInteractive(
-      new Phaser.Geom.Rectangle(0, 0, panelWidth, panelHeight),
-      Phaser.Geom.Rectangle.Contains
-    );
-    this.cheatPanel.on("pointerdown", () => {
-      this.tweens.add({
-        targets: this.cheatPanel,
-        x: this.scale.width,
-        duration: 300,
-        ease: "Power2",
-      });
-      this.arrow.setVisible(true);
-      this.cheatLabel.setVisible(true);
-    });
   }
+
 }
 

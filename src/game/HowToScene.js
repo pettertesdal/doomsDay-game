@@ -7,6 +7,11 @@ export class HowToScene extends Scene {
 
   preload() {
     this.load.bitmapFont('PixelGame', 'assets/fonts/PixelGame.png', 'assets/fonts/PixelGame.xml');
+    this.load.bitmapFont(
+      "ari",
+      "assets/fonts/ari-font.png",
+      "assets/fonts/ari-font.xml"
+    );
   }
 
   init(data) {
@@ -41,20 +46,7 @@ export class HowToScene extends Scene {
     });
 
     const instructions = [
-      "1. The Doomsday Algorithm helps",
-      "   you find the weekday of any date.",
-      "   Before starting it may be useful to think of the days in numbers",
-      "   Sunday-0, Monday-1, Tuesday-2, Wedensday-3",
-      "   Thuesday-4, Friday-5, Saturday-6",
-      "",
-      "2. Steps to calculate:",
-      "   a) How many times does the number 12 fit as a whole into the two last digits of the year number?",
-      "   b) What is the difference between the two last digits of the year number and the product of the multiples of 12 from calculation a?",
-      "   c) How many times does the number 4 fit into the result of calculation b?",
-      "   d) What is the century's anchor day?",
-      "   e) Add up all the results.",
-      "   f) Subtract whole multiples of 7 from the result of calculation 5.",
-      "   This will result in a number between 0 and 6, which corresponds to the doomsday of the year.",
+      "1. Things to remember",
       "",
       "Press ENTER to go back to menu."
     ];
@@ -76,6 +68,7 @@ export class HowToScene extends Scene {
 
 
     // Animated example calculation
+    /*
     const exampleDate = "March 14, 2025 → Friday";
     const exampleText = this.add.bitmapText(80, startY + instructions.length * 40 + 20, 'PixelGame', '', 28)
     .setAlpha(0);
@@ -94,6 +87,7 @@ export class HowToScene extends Scene {
         exampleText.text += exampleDate[exampleText.text.length];
       }
     });
+      */
 
     // Back to Menu button
     const menuButton = this.add.bitmapText(
@@ -115,7 +109,7 @@ export class HowToScene extends Scene {
       targets: menuButton,
       alpha: 1,
       duration: 1000,
-      delay: instructions.length * 150 + exampleDate.length * 100,
+      delay: instructions.length * 150,
       ease: 'Power2'
     });
 
@@ -146,7 +140,7 @@ export class HowToScene extends Scene {
       targets: tutorialDoomsdayButton,
       alpha: 1,
       duration: 1000,
-      delay: instructions.length * 150 + exampleDate.length * 100 + 200,
+      delay: instructions.length * 150 + 200,
       ease: 'Power2'
     });
 
@@ -176,18 +170,18 @@ export class HowToScene extends Scene {
       targets: tutorialDateButton,
       alpha: 1,
       duration: 1000,
-      delay: instructions.length * 150 + exampleDate.length * 100 + 200,
+      delay: instructions.length * 150 + 200,
       ease: 'Power2'
     });
 
     tutorialDateButton.on('pointerover', () => {
       tutorialDateButton.setTint(0x00ff00);
-      this.tweens.add({ targets: tutorialButton, scale: 1.2, duration: 100, ease: 'Power1' });
+      this.tweens.add({ targets: tutorialDateButton, scale: 1.2, duration: 100, ease: 'Power1' });
     });
 
     tutorialDateButton.on('pointerout', () => {
       tutorialDateButton.clearTint();
-      this.tweens.add({ targets: tutorialButton, scale: 1, duration: 100, ease: 'Power1' });
+      this.tweens.add({ targets: tutorialDateButton, scale: 1, duration: 100, ease: 'Power1' });
     });
 
     tutorialDateButton.on('pointerdown', () => this.scene.start('TutorialDate', {exampleDay: this.exampleDay, exampleMonth: this.exampleMonth, exampleYear: this.exampleYear}));

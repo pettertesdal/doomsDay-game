@@ -8,7 +8,11 @@ export class PlayScene extends Scene {
 
   preload () {
     this.load.bitmapFont('PixelGame', 'assets/fonts/PixelGame.png', 'assets/fonts/PixelGame.xml');
-    this.load.bitmapFont('pixel', 'assets/fonts/pixel.png', 'assets/fonts/pixel.xml');
+    this.load.bitmapFont(
+      "ari",
+      "assets/fonts/ari-font.png",
+      "assets/fonts/ari-font.xml"
+    );
   }
 
   create(data) {
@@ -20,17 +24,17 @@ export class PlayScene extends Scene {
     this.difficulty = data.difficulty;
 
     // Score, mistakes, timer
-    this.scoreText = this.add.bitmapText(10, 10, 'PixelGame', 'Score: 0', 24);
-    this.mistakesText = this.add.bitmapText(10, 50, 'PixelGame', 'Mistakes: 0', 24);
-    this.timerText = this.add.bitmapText(10, 90, 'PixelGame', 'Time: ' + this.timeLeft, 24);
+    this.scoreText = this.add.bitmapText(10, 10, 'ari', 'Score: 0', 24);
+    this.mistakesText = this.add.bitmapText(10, 50, 'ari', 'Mistakes: 0', 24);
+    this.timerText = this.add.bitmapText(10, 90, 'ari', 'Time: ' + this.timeLeft, 24);
 
     // Current date
     this.currentDateString = this.generateRandomDate();
-    this.dateText = this.add.bitmapText(this.scale.width / 2, 150, 'pixel', this.currentDateString, 48)
+    this.dateText = this.add.bitmapText(this.scale.width / 2, 150, 'ari', this.currentDateString, 48)
       .setOrigin(0.5);
 
     // Player input
-    this.inputText = this.add.bitmapText(this.scale.width / 2, 250, 'pixel', '', 32).setOrigin(0.5);
+    this.inputText = this.add.bitmapText(this.scale.width / 2, 250, 'ari', '', 32).setOrigin(0.5);
     this.inputString = '';
 
     // Timer
