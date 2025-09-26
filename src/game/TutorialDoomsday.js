@@ -42,8 +42,10 @@ export class TutorialDoomsday extends Scene {
     this.total = this.fit12 + this.remainder + this.div4 + this.anchor;
     this.doomsday = this.total % 7; // final number 0=Sun..6=Sat
 
-    const weekdays = ["sunday", "monday", "tuesday", "wedensday", "thursday", "friday", "saturday"];
+    const weekdays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    const ukedager = ["søndag", "mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag"];
     this.weekday = weekdays[this.doomsday];
+    this.ukedag = ukedager[this.doomsday];
   }
 
   create() {
@@ -99,14 +101,11 @@ export class TutorialDoomsday extends Scene {
     // Keyboard input (⚠️ keep reference if you later want to clean it up)
     this.keyHandler = (event) => {
       if (event.key.length === 1) {
-        if (/[0-9-]/.test(event.key)) {
-          // numbers and dash
+        // Allow: numbers, dash, ASCII letters, extended Latin letters (ø, æ, å, etc.)
+        if (/[0-9a-z\-]/i.test(event.key) || /[\u00C0-\u017F]/.test(event.key)) {
           this.playerInput += event.key;
-        } else if (/[a-z]/i.test(event.key)) {
-          // letters
-          this.playerInput += event.key;
+          this.inputText.setText(this.playerInput);
         }
-        this.inputText.setText(this.playerInput);
       } else if (event.key === "Backspace") {
         this.playerInput = this.playerInput.slice(0, -1);
         this.inputText.setText(this.playerInput);
@@ -114,6 +113,7 @@ export class TutorialDoomsday extends Scene {
         this.checkStep();
       }
     };
+
 
     this.input.keyboard.on("keydown", this.keyHandler);
 
@@ -165,13 +165,13 @@ export class TutorialDoomsday extends Scene {
         onSuccess: (val) => (this.calculationParts[0] = val),
       },
       {
-        text: () => `Step 2: What is left, after the last step?`,
+        text: () => `Step 2: What is remaining, after the last step?`,
         check: () => this.playerInput === String(this.remainder),
         success: "✅ Correct!",
         onSuccess: (val) => (this.calculationParts[1] = val),
       },
       {
-        text: () => `Step 3: Divide the remainder (${this.remainder}) by 4`,
+        text: () => `Step 3: Divide the remainder (${this.remainder}) by 4 and round down`,
         check: () => this.playerInput === String(this.div4),
         success: "✅ Nice!",
         onSuccess: (val) => (this.calculationParts[2] = val),
@@ -189,7 +189,7 @@ export class TutorialDoomsday extends Scene {
         onSuccess: (val) => (this.calculationParts[5] = "mod 7("+val+")"),
       },
       {
-        text: () => `Step 6: Reduce the total modulo 7 (0=Sun..6=Sat).`,
+        text: () => `Step 6: Reduce the total by 7 as many times as you can, and write what is remaining.`,
         check: () => this.playerInput === String(this.doomsday),
         success: "✅ Yes! You have the number, but what day is it?",
         onSuccess: (val) => (this.calculationParts[5] = val),
@@ -197,14 +197,13 @@ export class TutorialDoomsday extends Scene {
       {
         text: () => `Step 7: Which weekday is ${this.doomsday}?`,
         check: () => {
-          return (
-            this.playerInput.trim().toLowerCase() ===
-              this.weekday
-          );
+          const input = this.playerInput.trim().toLowerCase();
+          return input === this.weekday || input === this.ukedag;
         },
         success: `✅ Correct! ${this.weekday} is the doomsday of year ${this.exampleYear}!`,
         onSuccess: (val) => (this.finalWeekday = val),
       }
+
     ];
   }
 

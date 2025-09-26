@@ -30,6 +30,7 @@ export class TutorialDate extends Scene {
     this.currentStep = 0;
     this.calculationParts = [];
     this.finalWeekday = undefined;
+    this.finalUkedag= undefined;
     this.playerInput = "";
 
     // --- Precompute values for tutorial ---
@@ -41,8 +42,10 @@ export class TutorialDate extends Scene {
     this.total = this.fit12 + this.remainder + this.div4 + this.anchor;
     this.doomsday = this.total % 7; // final number 0=Sun..6=Sat
 
-    const weekdays = ["sunday", "monday", "tuesday", "wedensday", "thursday", "friday", "saturday"];
+    const weekdays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    const ukedager = ["søndag", "mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag"];
     this.weekday = weekdays[this.doomsday];
+    this.ukedag = ukedager[this.doomsday];
 
     const doomsdayDates = [3,28,14,4,9,6,11,8,5,10,7,12];
     if ((this.exampleYear%4===0 && this.exampleYear%100!==0) || (this.exampleYear%400===0)) {
@@ -52,9 +55,10 @@ export class TutorialDate extends Scene {
 
     this.doomTotal = this.doomsday + this.diff;
 
-    this.dayNumber = this.doomTotal % 7; 
+    this.dayNumber = ((this.doomTotal % 7) + 7) % 7;
 
     this.finalWeekday = weekdays[this.dayNumber];
+    this.finalUkedag= ukedager[this.dayNumber];
   }
 
   create() {
@@ -110,14 +114,11 @@ export class TutorialDate extends Scene {
     // Keyboard input (⚠️ keep reference if you later want to clean it up)
     this.keyHandler = (event) => {
       if (event.key.length === 1) {
-        if (/[0-9-]/.test(event.key)) {
-          // numbers and dash
+        // Allow: numbers, dash, ASCII letters, extended Latin letters (ø, æ, å, etc.)
+        if (/[0-9a-z\-]/i.test(event.key) || /[\u00C0-\u017F]/.test(event.key)) {
           this.playerInput += event.key;
-        } else if (/[a-z]/i.test(event.key)) {
-          // letters
-          this.playerInput += event.key;
+          this.inputText.setText(this.playerInput);
         }
-        this.inputText.setText(this.playerInput);
       } else if (event.key === "Backspace") {
         this.playerInput = this.playerInput.slice(0, -1);
         this.inputText.setText(this.playerInput);
@@ -188,7 +189,7 @@ export class TutorialDate extends Scene {
         onSuccess: (val) => (this.calculationParts[1] = this.doomsday, this.calculationParts[2] = "mod 7 (" + this.doomTotal + ")"),
       },
       {
-        text: () => `Step 3: Now do mod 7 on the total.`,
+        text: () => `Step 3: Now remove as many 7s as you can and write what is remaining.`,
         check: () => {
           return this.playerInput === String(this.dayNumber);
         },
@@ -198,10 +199,8 @@ export class TutorialDate extends Scene {
       {
         text: () => `Step 4: We now have ${this.dayNumber}, but what weekday is it?.`,
         check: () => {
-          return (
-            this.playerInput.trim().toLowerCase() ===
-              this.finalWeekday
-          );
+          const input = this.playerInput.trim().toLowerCase();
+          return input === this.finalWeekday || input === this.finalUkedag;
         },
         success: "✅ You've found the weekday!",
       }

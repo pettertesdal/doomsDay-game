@@ -67,28 +67,6 @@ export class HowToScene extends Scene {
 
 
 
-    // Animated example calculation
-    /*
-    const exampleDate = "March 14, 2025 → Friday";
-    const exampleText = this.add.bitmapText(80, startY + instructions.length * 40 + 20, 'PixelGame', '', 28)
-    .setAlpha(0);
-
-    this.tweens.add({
-      targets: exampleText,
-      alpha: 1,
-      duration: 500,
-      delay: instructions.length * 150,
-    });
-
-    this.time.addEvent({
-      delay: 100,
-      repeat: exampleDate.length - 1,
-      callback: () => {
-        exampleText.text += exampleDate[exampleText.text.length];
-      }
-    });
-      */
-
     // Back to Menu button
     const menuButton = this.add.bitmapText(
       this.scale.width / 2,
@@ -101,9 +79,37 @@ export class HowToScene extends Scene {
     .setInteractive({ useHandCursor: true });
 
     this.dateText = this.add
-      .bitmapText(this.scale.width / 2, 120, "PixelGame", 
-        `Example Date: ${this.exampleDay}.${this.exampleMonth}.${this.exampleYear}`, 28)
+      .bitmapText(this.scale.width / 2, 120, "ari", 
+        `Target date`, 20)
       .setOrigin(0.5);
+
+
+    // Animated date text
+    const fullDateText = `${this.exampleDay}.${this.exampleMonth}.${this.exampleYear}`;
+    this.dateText = this.add
+      .bitmapText(this.scale.width / 2, 170, "ari", "", 28)
+      .setOrigin(0.5)
+      .setAlpha(0);
+
+    // Fade in
+    this.tweens.add({
+      targets: this.dateText,
+      alpha: 1,
+      duration: 500,
+      delay: instructions.length * 150, // sync with other text
+    });
+
+    // Typewriter effect
+    this.time.addEvent({
+      delay: 100,
+      repeat: fullDateText.length - 1,
+      callback: () => {
+        this.dateText.text += fullDateText[this.dateText.text.length];
+      }
+    });
+
+
+
 
     this.tweens.add({
       targets: menuButton,
