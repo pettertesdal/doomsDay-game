@@ -1,8 +1,8 @@
 import { Scene } from "phaser";
 
-export class TutorialScene extends Scene {
+export class TutorialDate extends Scene {
   constructor() {
-    super({ key: "TutorialScene" });
+    super({ key: "TutorialDate" });
     this.currentStep = 0;
     this.calculationParts = [];
     this.dayDiff = undefined;
@@ -29,6 +29,11 @@ export class TutorialScene extends Scene {
     this.exampleYear = data.exampleYear;
 
     console.log('Init got:', data);
+    this.currentStep = 0;
+    this.calculationParts = [];
+    this.dayDiff = undefined;
+    this.finalWeekday = undefined;
+    this.playerInput = "";
   }
 
   create() {
@@ -147,46 +152,13 @@ export class TutorialScene extends Scene {
 
     this.steps = [
       {
-        text: () => `Step 1: How many times does 12 fit into the last two numbers of the year?`,
-        check: () => this.playerInput === String(Math.floor((this.exampleYear % 100) / 12)),
-        success: "✅ Good! Press Enter for remainder step.",
-        onSuccess: (val) => (this.calculationParts[0] = val),
-      },
-      {
-        text: () => `Step 2: What is left, after the last step?`,
-        check: () => this.playerInput === String(Math.floor((this.exampleYear % 100) % 12)),
-        success: "✅ Good! Press Enter to continue.",
-        onSuccess: (val) => (this.calculationParts[1] = val),
-      },
-      {
-        text: () => `Step 3: Divide the remainder ${this.exampleYear % 100 % 12} by 4 → type the result`,
-        check: () => this.playerInput === String(Math.floor((this.exampleYear % 100 % 12) / 4)),
-        success: "✅ Nice! Next, add the century anchor day.",
-        onSuccess: (val) => (this.calculationParts[2] = val),
-      },
-      {
-        text: () => `Step 4: Add the century anchor. What is it?`,
-        check: () => this.playerInput === String(getAnchorDay(this.exampleYear)),
-        success: "✅ Almost there! Press Enter to reduce mod 7.",
-        onSuccess: (val) => (this.calculationParts[3] = val),
-      },
-      {
-        text: () => `Step 5: Reduce total mod 7 (0=Sun..6=Sat)`,
-        check: () => {
-          const total = Math.floor((this.exampleYear % 100) / 12) + (this.exampleYear % 100 % 12) + Math.floor((this.exampleYear % 100 % 12)/4) + getAnchorDay(this.exampleYear);
-          return this.playerInput === String(total % 7);
-        },
-        success: "✅ Correct! This is the year's Doomsday.",
-        onSuccess: (val) => (this.calculationParts[4] = val),
-      },
-      {
         text: () => {
           const doomsdayDates = [3,28,14,4,9,6,11,8,5,10,7,12];
           if ((this.exampleYear%4===0 && this.exampleYear%100!==0) || (this.exampleYear%400===0)) {
             doomsdayDates[0]=4; doomsdayDates[1]=29;
           }
           const dd = doomsdayDates[this.exampleMonth-1];
-          return `Step 6: Subtract doomsday date for month (${dd}) from today (${this.exampleDay})`;
+          return `Step 1: Subtract doomsday date for month (${dd}) from today (${this.exampleDay})`;
         },
         check: () => {
           const doomsdayDates = [3,28,14,4,9,6,11,8,5,10,7,12];
@@ -200,7 +172,7 @@ export class TutorialScene extends Scene {
         onSuccess: (val) => (this.dayDiff = val),
       },
       {
-        text: () => `Step 7: Add your difference to the Doomsday weekday mod 7.`,
+        text: () => `Step 2: Add your difference to the Doomsday weekday mod 7.`,
         check: () => {
           const total = Math.floor((this.exampleYear % 100) / 12) + (this.exampleYear % 100 % 12) + Math.floor((this.exampleYear % 100 % 12)/4) + getAnchorDay(this.exampleYear);
           const weekday = total % 7;
