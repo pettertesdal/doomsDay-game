@@ -65,12 +65,13 @@ export class HowToScene extends Scene {
       });
     });
 
+    // Add this helper function inside the class
 
 
     // Back to Menu button
     const menuButton = this.add.bitmapText(
       this.scale.width / 2,
-      startY + instructions.length * 40 + 100,
+      startY + instructions.length * 40 + 160 + 60,
       'PixelGame',
       'Back to Menu',
       32
@@ -129,12 +130,12 @@ export class HowToScene extends Scene {
       this.tweens.add({ targets: menuButton, scale: 1, duration: 100, ease: 'Power1' });
     });
 
-    menuButton.on('pointerdown', () => this.scene.start('MenuScene'));
+    menuButton.on('pointerdown', () => this.scene.start("MenuScene", { skipIntro: true }));
 
     // Tutorial button
     const tutorialDoomsdayButton = this.add.bitmapText(
       this.scale.width / 2,
-      startY + instructions.length * 40 + 160,
+      startY + instructions.length * 40 + 100,
       'PixelGame',
       'Step-by-Step Tutorial',
       32
@@ -164,7 +165,7 @@ export class HowToScene extends Scene {
 
     const tutorialDateButton = this.add.bitmapText(
       this.scale.width / 2,
-      startY + instructions.length * 40 + 160 + 50,
+      startY + instructions.length * 40 + 160,
       'PixelGame',
       'Date calculation tutorial',
       32
@@ -193,6 +194,68 @@ export class HowToScene extends Scene {
     tutorialDateButton.on('pointerdown', () => this.scene.start('TutorialDate', {exampleDay: this.exampleDay, exampleMonth: this.exampleMonth, exampleYear: this.exampleYear}));
     // Allow Enter key to go back
     this.input.keyboard.on('keydown-ENTER', () => this.scene.start('MenuScene'));
-  }
-}
 
+    // Reroll Date button
+    const rerollButton = this.add.bitmapText(
+      this.scale.width / 2,
+      startY + 75, // below the other buttons
+      'PixelGame',
+      'Reroll Date',
+      32
+    ).setOrigin(0.5)
+    .setAlpha(0)
+    .setInteractive({ useHandCursor: true });
+
+    this.tweens.add({
+      targets: rerollButton,
+      alpha: 1,
+      duration: 1000,
+      delay: instructions.length * 150 + 400,
+      ease: 'Power2'
+    });
+
+    rerollButton.on('pointerover', () => {
+      rerollButton.setTint(0x00ff00);
+      this.tweens.add({ targets: rerollButton, scale: 1.2, duration: 100, ease: 'Power1' });
+    });
+
+    rerollButton.on('pointerout', () => {
+      rerollButton.clearTint();
+      this.tweens.add({ targets: rerollButton, scale: 1, duration: 100, ease: 'Power1' });
+    });
+
+    rerollButton.on('pointerdown', () => this.rerollDate());
+
+  }
+
+  rerollDate() {
+    // Pick a new random date
+    this.exampleYear = Phaser.Math.Between(1900, 2099);
+    this.exampleMonth = Phaser.Math.Between(1, 12);
+    const daysInMonth = new Date(this.exampleYear, this.exampleMonth, 0).getDate();
+    this.exampleDay = Phaser.Math.Between(1, daysInMonth);
+
+    const newFullDate = `${this.exampleDay}.${this.exampleMonth}.${this.exampleYear}`;
+
+    // Reset the date text
+    this.dateText.text = "";
+    this.dateText.alpha = 0;
+
+    // Fade in
+    this.tweens.add({
+      targets: this.dateText,
+      alpha: 1,
+      duration: 500,
+    });
+
+    // Typewriter effect
+    this.time.addEvent({
+      delay: 100,
+      repeat: newFullDate.length - 1,
+      callback: () => {
+        this.dateText.text += newFullDate[this.dateText.text.length];
+      }
+    });
+  }
+
+}

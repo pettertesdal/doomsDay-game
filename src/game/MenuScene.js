@@ -3,30 +3,48 @@ import { Scene } from "phaser";
 export class MenuScene extends Scene {
   constructor () {
     super({ key: 'MenuScene' });
+    this.skipIntro = false; // ✅ plain JS property
   }
 
   preload () {
     this.load.bitmapFont(
-      'PixelGame',                 // key you’ll use later
-      'assets/fonts/PixelGame.png', // path to PNG
-      'assets/fonts/PixelGame.xml'  // or .fnt / .json file
+      'PixelGame',
+      'assets/fonts/PixelGame.png',
+      'assets/fonts/PixelGame.xml'
     );
   }
 
+  init (data) {
+    // read skip flag (default false)
+    this.skipIntro = data && data.skipIntro ? true : false;
+  }
 
   create () {
-    // --- Step 1: Big animated title ---
+    if (this.skipIntro) {
+      // --- Skip straight to menu ---
+      this.add.bitmapText(
+        this.scale.width / 2,
+        80,
+        'PixelGame',
+        'DOOMSDAY',
+        64
+      ).setOrigin(0.5);
+
+      this.showMenu();
+      return;
+    }
+
+    // --- Otherwise, play intro ---
     const title = this.add.bitmapText(
-      this.scale.width / 2, 
-      this.scale.height / 2, 
-      'PixelGame', 
-      'DOOMSDAY', 
+      this.scale.width / 2,
+      this.scale.height / 2,
+      'PixelGame',
+      'DOOMSDAY',
       64
     ).setOrigin(0.5)
-    .setAlpha(0)
-    .setScale(4); // start large for a zoom-in effect
+     .setAlpha(0)
+     .setScale(4);
 
-    // Animate title in
     this.tweens.add({
       targets: title,
       alpha: 1,
@@ -34,54 +52,71 @@ export class MenuScene extends Scene {
       duration: 1500,
       ease: 'Back.Out',
       onComplete: () => {
-        // After a pause, fade out and show menu
-        this.time.delayedCall(1000, () => {
+        this.time.delayedCall(600, () => {
           this.tweens.add({
             targets: title,
-            alpha: 0,
-            duration: 800,
-            onComplete: () => this.showMenu()
+            y: 80,
+            duration: 1000,
+            ease: 'Back.InOut'
           });
+
+          this.time.delayedCall(200, () => this.showMenu());
         });
       }
     });
   }
 
   showMenu () {
-    // --- Step 2: Animated menu options ---
     const items = [
-      { text: "Welcome to Doomsday!", y: 100, size: 24 },
-      { text: "Choose a difficulty", y: 140, size: 24 },
-      { text: "Easy", y: 200, size: 24, callback: () => this.scene.start("PlayScene", { difficulty: 0 }) },
-      { text: "Medium", y: 240, size: 24, callback: () => this.scene.start("PlayScene", { difficulty: 1 }) },
-      { text: "Hard", y: 280, size: 24, callback: () => this.scene.start("PlayScene", { difficulty: 2 }) },
-      { text: "How to play", y: 320, size: 24, callback: () => this.scene.start("HowToScene")}
+      { text: "Welcome to Doomsday!", y: 160, size: 24 },
+      { text: "Choose a difficulty", y: 200, size: 24 },
+      { text: "Easy", y: 280, size: 28, callback: () => this.scene.start("PlayScene", { difficulty: 0 }) },
+      { text: "Medium", y: 330, size: 28, callback: () => this.scene.start("PlayScene", { difficulty: 1 }) },
+      { text: "Hard", y: 380, size: 28, callback: () => this.scene.start("PlayScene", { difficulty: 2 }) },
+      { text: "How to play", y: 440, size: 24, callback: () => this.scene.start("HowToScene")}
     ];
 
     items.forEach((item, i) => {
       const txt = this.add.bitmapText(
-        100,
+        this.skipIntro ? 120 : -200,
         item.y,
         'PixelGame',
         item.text,
         item.size
-      ).setAlpha(0);
+      ).setAlpha(this.skipIntro ? 1 : 0);
 
-      // Animate each line in sequence
-      this.tweens.add({
-        targets: txt,
-        alpha: 1,
-        x: 120,
-        duration: 500,
-        delay: i * 200,
-        ease: 'Power2'
-      });
+      if (!this.skipIntro) {
+        this.tweens.add({
+          targets: txt,
+          alpha: 1,
+          x: 120,
+          duration: 600,
+          delay: i * 200,
+          ease: 'Back.Out'
+        });
+      }
 
       if (item.callback) {
         txt.setInteractive({ useHandCursor: true })
           .on('pointerdown', item.callback)
-          .on('pointerover', () => txt.setTint(0x00ff00))
-          .on('pointerout', () => txt.clearTint());
+          .on('pointerover', () => {
+            this.tweens.add({
+              targets: txt,
+              scale: 1.2,
+              duration: 200,
+              ease: 'Power2'
+            });
+            txt.setTint(0x00ff00);
+          })
+          .on('pointerout', () => {
+            this.tweens.add({
+              targets: txt,
+              scale: 1,
+              duration: 200,
+              ease: 'Power2'
+            });
+            txt.clearTint();
+          });
       }
     });
   }

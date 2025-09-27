@@ -8,19 +8,16 @@ export class PlayScene extends Scene {
 
   preload () {
     this.load.bitmapFont('PixelGame', 'assets/fonts/PixelGame.png', 'assets/fonts/PixelGame.xml');
-    this.load.bitmapFont(
-      "ari",
-      "assets/fonts/ari-font.png",
-      "assets/fonts/ari-font.xml"
-    );
+    this.load.bitmapFont("ari", "assets/fonts/ari-font.png", "assets/fonts/ari-font.xml");
   }
 
   create(data) {
     this.cameras.main.setBackgroundColor(0xEDE6D1);
 
+    this.streak = 1.0;
     this.score = 0;
     this.mistakes = 0;
-    this.timeLeft = 30;
+    this.timeLeft = 90;
     this.difficulty = data.difficulty;
 
     // Score, mistakes, timer
@@ -30,7 +27,10 @@ export class PlayScene extends Scene {
 
     // Current date
     this.currentDateString = this.generateRandomDate();
-    this.dateText = this.add.bitmapText(this.scale.width / 2, 150, 'ari', this.currentDateString, 48)
+    this.dateText = this.add.bitmapText(this.scale.width / 2, 110, 'ari', this.currentDateString, 48)
+      .setOrigin(0.5);
+
+    this.helpText = this.add.bitmapText(this.scale.width / 2, 170, 'ari', "Type the weekday of the date", 25)
       .setOrigin(0.5);
 
     // Player input
@@ -103,18 +103,22 @@ export class PlayScene extends Scene {
 
   checkAnswer() {
     const correctDay = this.calculateDoomsdayAlgorithm(this.currentDate);
+    const correctDay2 = this.calculateUkedag(this.currentDate);
 
-    if (this.inputString.toLowerCase() === correctDay.toLowerCase()) {
-      this.score += 10;
+    if (this.inputString.toLowerCase() === correctDay.toLowerCase() || this.inputString.toLowerCase() === correctDay2.toLowerCase()) {
+      this.score += 10 * this.streak;
       this.scoreText.setText('Score: ' + this.score);
+      this.streak += 0.1;
+      this.timeLeft += 4;
       this.tweens.add({ targets: this.scoreText, scale: { from: 1.2, to: 1 }, duration: 200, ease: 'Back.Out' });
     } else {
+      this.streak = 1.0;
       this.mistakes++;
       this.mistakesText.setText('Mistakes: ' + this.mistakes);
       this.tweens.add({ targets: this.mistakesText, scale: { from: 1.2, to: 1 }, duration: 200, ease: 'Back.Out' });
 
       if (this.mistakes >= this.maxMistakes) {
-        this.scene.start('EndScene', { score: this.score });
+        this.scene.start('EndScene', { score: this.score , difficulty: this.difficulty});
         return;
       }
     }
@@ -124,6 +128,7 @@ export class PlayScene extends Scene {
     this.inputText.setText('');
     this.currentDateString = this.generateRandomDate();
     this.dateText.setText(this.currentDateString);
+    this.timeLeft += 10;
   }
 
   updateTimer() {
@@ -167,5 +172,8 @@ export class PlayScene extends Scene {
     const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return weekdays[date.getDay()];
   }
+  calculateUkedag(date) {
+    const weekdays = ['Søndag', 'Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag'];
+    return weekdays[date.getDay()];
+  }
 }
-
