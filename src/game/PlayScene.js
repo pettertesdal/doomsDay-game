@@ -19,16 +19,10 @@ export class PlayScene extends Scene {
     switch (this.difficulty) {
       case 0:
         this.timeLeft = 90;
-        year = today.getFullYear();
-        break;
       case 1:
         this.timeLeft = 120;
-        year = Phaser.Math.Between(1900, 2099);
-        break;
       case 2:
         this.timeLeft = 150;
-        year = Phaser.Math.Between(1000, 2099);
-        break;
     }
 
     this.streak = 1.0;
