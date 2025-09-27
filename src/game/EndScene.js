@@ -4,6 +4,7 @@ export class EndScene extends Scene {
   constructor() {
     super({ key: "EndScene" });
     this.inputElement = null;
+    this.difficulty = null;
   }
 
   preload() {
@@ -17,18 +18,21 @@ export class EndScene extends Scene {
   async create(data) {
     this.cameras.main.setBackgroundColor(0xede6d1);
 
+    // Save difficulty from data (numeric: 0 = Easy, 1 = Medium, 2 = Hard)
+    this.difficulty = data.difficulty;
+
     // --- Title ---
     const title = this.add
-      .bitmapText(
-        this.scale.width / 2,
-        100,
-        "PixelGame",
-        "GAME OVER!",
-        64
-      )
-      .setOrigin(0.5)
-      .setAlpha(0)
-      .setScale(4);
+    .bitmapText(
+      this.scale.width / 2,
+      100,
+      "PixelGame",
+      "GAME OVER!",
+      64
+    )
+    .setOrigin(0.5)
+    .setAlpha(0)
+    .setScale(4);
 
     this.tweens.add({
       targets: title,
@@ -40,15 +44,15 @@ export class EndScene extends Scene {
 
     // --- Score ---
     const scoreText = this.add
-      .bitmapText(
-        this.scale.width / 2,
-        200,
-        "PixelGame",
-        "Score: " + data.score,
-        32
-      )
-      .setOrigin(0.5)
-      .setAlpha(0);
+    .bitmapText(
+      this.scale.width / 2,
+      200,
+      "PixelGame",
+      "Score: " + data.score,
+      32
+    )
+    .setOrigin(0.5)
+    .setAlpha(0);
 
     this.tweens.add({
       targets: scoreText,
@@ -60,19 +64,63 @@ export class EndScene extends Scene {
 
     // --- Handle leaderboard ---
     await this.handleLeaderboard(data.score);
+    // --- Retry Button ---
+    const retryButton = this.add
+    .bitmapText(
+      this.scale.width / 2,
+      this.scale.height - 140, // put it above "Back to Menu"
+      "PixelGame",
+      "Retry",
+      32
+    )
+    .setOrigin(0.5)
+    .setAlpha(0)
+    .setInteractive({ useHandCursor: true });
+
+    this.tweens.add({
+      targets: retryButton,
+      alpha: 1,
+      duration: 1000,
+      delay: 2000,
+      ease: "Power2",
+    });
+
+    retryButton.on("pointerover", () => {
+      retryButton.setTint(0x00ff00);
+      this.tweens.add({
+        targets: retryButton,
+        scale: 1.2,
+        duration: 100,
+        ease: "Power1",
+      });
+    });
+
+    retryButton.on("pointerout", () => {
+      retryButton.clearTint();
+      this.tweens.add({
+        targets: retryButton,
+        scale: 1,
+        duration: 100,
+        ease: "Power1",
+      });
+    });
+
+    retryButton.on("pointerdown", () =>
+      this.scene.start("PlayScene", { difficulty: this.difficulty })
+    );
 
     // --- Menu Button ---
     const menuButton = this.add
-      .bitmapText(
-        this.scale.width / 2,
-        this.scale.height - 80,
-        "PixelGame",
-        "Back to Menu",
-        32
-      )
-      .setOrigin(0.5)
-      .setAlpha(0)
-      .setInteractive({ useHandCursor: true });
+    .bitmapText(
+      this.scale.width / 2,
+      this.scale.height - 80,
+      "PixelGame",
+      "Back to Menu",
+      32
+    )
+    .setOrigin(0.5)
+    .setAlpha(0)
+    .setInteractive({ useHandCursor: true });
 
     this.tweens.add({
       targets: menuButton,
@@ -107,48 +155,64 @@ export class EndScene extends Scene {
     );
   }
 
+  // --- Difficulty label helper ---
+  difficultyLabel() {
+    const labels = ["Easy", "Medium", "Hard"];
+    return labels[this.difficulty] ?? `Mode ${this.difficulty}`;
+  }
+
   // --- API helpers ---
   async postScore(name, score, difficulty) {
-  const res = await fetch("/api/leaderboard", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, score, difficulty })
-  })
-  return res.json()
-}
+    try {
+      const res = await fetch("/api/leaderboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, score, difficulty }),
+      });
+      if (!res.ok) throw new Error(`Failed to post score: ${res.statusText}`);
+      return res.json();
+    } catch (err) {
+      console.error(err);
+      return [];
+    }
+  }
 
-async getLeaderboard(difficulty) {
-  const res = await fetch(`/api/leaderboard?difficulty=${difficulty}`)
-  return res.json()
-}
-
+  async getLeaderboard(difficulty) {
+    try {
+      const res = await fetch(`/api/leaderboard?difficulty=${difficulty}`);
+      if (!res.ok) throw new Error(`Failed to fetch leaderboard: ${res.statusText}`);
+      return res.json();
+    } catch (err) {
+      console.error(err);
+      return [];
+    }
+  }
 
   // --- Leaderboard logic ---
   async handleLeaderboard(score) {
-  const difficulty = this.scene.settings.data.difficulty
-  let leaderboard = await this.getLeaderboard(difficulty)
+    let leaderboard = await this.getLeaderboard(this.difficulty);
 
-  const qualifies =
-    leaderboard.length < 10 ||
-    score > leaderboard[leaderboard.length - 1].score
+    const qualifies =
+      leaderboard.length < 10 ||
+        score > leaderboard[leaderboard.length - 1].score;
 
-  if (qualifies) {
-    this.showNameEntry(score, difficulty)
-  } else {
-    this.showLeaderboard(leaderboard, 260)
+    if (qualifies) {
+      this.showNameEntry(score, this.difficulty);
+    } else {
+      this.showLeaderboard(leaderboard, 260);
+    }
   }
-}
 
-  showNameEntry(score) {
+  showNameEntry(score, difficulty) {
     const promptText = this.add
-      .bitmapText(
-        this.scale.width / 2,
-        260,
-        "PixelGame",
-        "You made the leaderboard!\nEnter your name:",
-        24
-      )
-      .setOrigin(0.5);
+    .bitmapText(
+      this.scale.width / 2,
+      260,
+      "PixelGame",
+      "You made the leaderboard!\nEnter your name:",
+      24
+    )
+    .setOrigin(0.5);
 
     // HTML input element overlay
     const input = document.createElement("input");
@@ -184,7 +248,11 @@ async getLeaderboard(difficulty) {
     input.addEventListener("keydown", async (event) => {
       if (event.key === "Enter") {
         const playerName = input.value || "Anon";
-        const leaderboard = await this.postScore(playerName, score, difficulty);
+        const leaderboard = await this.postScore(
+          playerName,
+          score,
+          difficulty
+        );
 
         input.remove();
         this.inputElement = null;
@@ -196,12 +264,17 @@ async getLeaderboard(difficulty) {
   }
 
   showLeaderboard(leaderboard, startY) {
+    if (!Array.isArray(leaderboard)) {
+      console.error("Leaderboard is not an array:", leaderboard);
+      return;
+    }
+
     this.add
       .bitmapText(
         this.scale.width / 2,
         startY,
         "PixelGame",
-        "Leaderboard",
+        `Leaderboard (${this.difficultyLabel()})`,
         32
       )
       .setOrigin(0.5);

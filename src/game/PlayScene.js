@@ -13,12 +13,27 @@ export class PlayScene extends Scene {
 
   create(data) {
     this.cameras.main.setBackgroundColor(0xEDE6D1);
+    this.difficulty = data.difficulty;
+    this.timeLeft = 90;
+
+    switch (this.difficulty) {
+      case 0:
+        this.timeLeft = 90;
+        year = today.getFullYear();
+        break;
+      case 1:
+        this.timeLeft = 120;
+        year = Phaser.Math.Between(1900, 2099);
+        break;
+      case 2:
+        this.timeLeft = 150;
+        year = Phaser.Math.Between(1000, 2099);
+        break;
+    }
 
     this.streak = 1.0;
     this.score = 0;
     this.mistakes = 0;
-    this.timeLeft = 90;
-    this.difficulty = data.difficulty;
 
     // Score, mistakes, timer
     this.scoreText = this.add.bitmapText(10, 10, 'ari', 'Score: 0', 24);
@@ -106,10 +121,21 @@ export class PlayScene extends Scene {
     const correctDay2 = this.calculateUkedag(this.currentDate);
 
     if (this.inputString.toLowerCase() === correctDay.toLowerCase() || this.inputString.toLowerCase() === correctDay2.toLowerCase()) {
-      this.score += 10 * this.streak;
+    switch (this.difficulty) {
+      case 0:
+        this.score += 10 * this.streak;
+        this.streak += 0.1;
+        this.timeLeft += 4;
+      case 1:
+        this.score += 20 * this.streak;
+        this.streak += 0.2;
+        this.timeLeft += 5;
+      case 2:
+        this.score += 30 * this.streak;
+        this.streak += 0.3;
+        this.timeLeft += 6;
+    }
       this.scoreText.setText('Score: ' + this.score);
-      this.streak += 0.1;
-      this.timeLeft += 4;
       this.tweens.add({ targets: this.scoreText, scale: { from: 1.2, to: 1 }, duration: 200, ease: 'Back.Out' });
     } else {
       this.streak = 1.0;
@@ -128,7 +154,6 @@ export class PlayScene extends Scene {
     this.inputText.setText('');
     this.currentDateString = this.generateRandomDate();
     this.dateText.setText(this.currentDateString);
-    this.timeLeft += 10;
   }
 
   updateTimer() {
