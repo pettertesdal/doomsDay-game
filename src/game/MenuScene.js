@@ -26,7 +26,7 @@ export class MenuScene extends Scene {
         .bitmapText(this.scale.width / 2, 80, "PixelGame", "DOOMSDAY", 64)
         .setOrigin(0.5)
         .setAlpha(0)
-        .setScale(3.5);
+        .setScale(2.0);
 
       const endScale = this.autoScaleTitle(title, isMobile, true);
 
@@ -55,7 +55,7 @@ export class MenuScene extends Scene {
       )
       .setOrigin(0.5)
       .setAlpha(0)
-      .setScale(3.5);
+      .setScale(2.0);
 
     const endScale = this.autoScaleTitle(title, isMobile, false);
 
@@ -64,15 +64,15 @@ export class MenuScene extends Scene {
       alpha: 1,
       scaleX: endScale,
       scaleY: endScale,
-      duration: 1500,
+      duration: 1200,
       ease: "Back.Out",
       onComplete: () => {
-        this.time.delayedCall(600, () => {
+        this.time.delayedCall(400, () => {
           this.time.delayedCall(250, () => this.showMenu(isMobile));
           this.tweens.add({
             targets: title,
             y: 80,
-            duration: 1000,
+            duration: 800,
             ease: "Back.InOut",
             onComplete: () => this.addBreathingTween(title, endScale),
           });
@@ -82,33 +82,30 @@ export class MenuScene extends Scene {
   }
 
   autoScaleTitle(title, isMobile, skippingIntro) {
-    // Fit title to ~80% of screen width
-    const maxWidth = this.scale.width * 0.8;
+    // On desktop shrink more (fit 50% width), on mobile keep ~70%
+    const maxWidth = this.scale.width * (isMobile ? 0.7 : 0.2);
     const rawWidth = title.width / (title.scaleX || 1);
 
     let newScale = maxWidth / rawWidth;
 
-    // Slightly smaller on mobile to avoid overflow
     if (isMobile) {
       newScale *= 0.9;
     }
 
-    // If skipping intro, land directly at final scale
     if (skippingIntro) {
       title.setScale(newScale);
       return newScale;
     }
 
-    // During intro animation, add a little extra "bounce" (like before)
-    return newScale + 0.2;
+    return newScale + 0.1;
   }
 
   addBreathingTween(target, base) {
     this.tweens.add({
       targets: target,
-      scaleX: { from: base, to: base + 0.05 },
-      scaleY: { from: base, to: base + 0.05 },
-      duration: 1500,
+      scaleX: { from: base, to: base + 0.04 },
+      scaleY: { from: base, to: base + 0.04 },
+      duration: 1400,
       ease: "Sine.InOut",
       yoyo: true,
       repeat: -1,
@@ -150,9 +147,8 @@ export class MenuScene extends Scene {
 
     items.forEach((item, i) => {
       const posX = isMobile ? this.scale.width / 2 : 120;
-      const fontSize = isMobile ? Math.round(item.size * 1.4) : item.size;
+      const fontSize = isMobile ? Math.round(item.size * 1.3) : item.size;
 
-      // Create the label
       const txt = this.add
         .bitmapText(
           this.skipIntro ? posX : -200,
