@@ -1,5 +1,7 @@
 import { Scene } from "phaser";
 
+// 👇 define base API URL once, outside the class
+// (later you could replace this with import.meta.env.VITE_API_BASE)
 const API_BASE = "https://tesdal.dev";
 
 export class EndScene extends Scene {
@@ -7,20 +9,26 @@ export class EndScene extends Scene {
     super({ key: "EndScene" });
     this.inputElement = null;
     this.difficulty = null;
-    this.runId = null;
   }
 
   preload() {
-    this.load.bitmapFont("PixelGame", "assets/fonts/PixelGame.png", "assets/fonts/PixelGame.xml");
-    this.load.bitmapFont("ari", "assets/fonts/ari-font.png", "assets/fonts/ari-font.xml");
+    // 👉 make sure these assets are placed in `public/assets/fonts/`
+    this.load.bitmapFont(
+      "PixelGame",
+      "assets/fonts/PixelGame.png",
+      "assets/fonts/PixelGame.xml"
+    );
+    this.load.bitmapFont(
+      "ari",
+      "assets/fonts/ari-font.png",
+      "assets/fonts/ari-font.xml"
+    );
   }
 
   async create(data) {
     this.cameras.main.setBackgroundColor(0xede6d1);
 
     this.difficulty = data.difficulty;
-    this.runId = data.runId;
-    this.score = data.score;
 
     // --- Title ---
     const title = this.add
@@ -39,7 +47,7 @@ export class EndScene extends Scene {
 
     // --- Score ---
     const scoreText = this.add
-      .bitmapText(this.scale.width / 2, 200, "PixelGame", "Score: " + this.score, 32)
+      .bitmapText(this.scale.width / 2, 200, "PixelGame", "Score: " + data.score, 32)
       .setOrigin(0.5)
       .setAlpha(0);
 
@@ -52,21 +60,22 @@ export class EndScene extends Scene {
     });
 
     // --- Leaderboard handling ---
-    await this.handleLeaderboard(this.score);
+    await this.handleLeaderboard(data.score);
   }
 
+  // --- Difficulty label helper ---
   difficultyLabel() {
     const labels = ["Easy", "Medium", "Hard"];
     return labels[this.difficulty] ?? `Mode ${this.difficulty}`;
   }
 
   // --- API helpers ---
-  async postScore(name, runId) {
+  async postScore(name, score, difficulty) {
     try {
       const res = await fetch(`${API_BASE}/api/leaderboard`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, runId }),
+        body: JSON.stringify({ name, score, difficulty }),
       });
       if (!res.ok) throw new Error(`Failed to post score: ${res.statusText}`);
       return res.json();
@@ -97,14 +106,14 @@ export class EndScene extends Scene {
         score > leaderboard[leaderboard.length - 1].score);
 
     if (qualifies) {
-      this.showNameEntry(score);
+      this.showNameEntry(score, this.difficulty);
     } else {
       this.showLeaderboard(leaderboard, 260);
       this.addMenuButtons(this.scale.height - 140);
     }
   }
 
-  showNameEntry(score) {
+  showNameEntry(score, difficulty) {
     const promptText = this.add
       .bitmapText(
         this.scale.width / 2,
@@ -119,12 +128,15 @@ export class EndScene extends Scene {
     input.type = "text";
     input.maxLength = 12;
 
+    // Position relative to game canvas
     input.style.position = "absolute";
-    input.style.left = this.scale.canvas.offsetLeft + this.scale.width / 2 - 100 + "px";
+    input.style.left =
+      this.scale.canvas.offsetLeft + this.scale.width / 2 - 100 + "px";
     input.style.top = this.scale.canvas.offsetTop + 300 + "px";
     input.style.width = "200px";
     input.style.height = "40px";
 
+    // Style
     input.style.background = "#ede6d1";
     input.style.color = "black";
     input.style.border = "4px solid black";
@@ -143,7 +155,7 @@ export class EndScene extends Scene {
     input.addEventListener("keydown", async (event) => {
       if (event.key === "Enter") {
         const playerName = input.value || "Anon";
-        const leaderboard = await this.postScore(playerName, this.runId);
+        const leaderboard = await this.postScore(playerName, score, difficulty);
 
         input.remove();
         this.inputElement = null;
@@ -186,6 +198,7 @@ export class EndScene extends Scene {
     });
   }
 
+  // --- Centralized button creation ---
   addMenuButtons(baseY) {
     const retryButton = this.add
       .bitmapText(this.scale.width / 2, baseY, "PixelGame", "Retry", 32)

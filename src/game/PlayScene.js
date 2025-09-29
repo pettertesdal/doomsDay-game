@@ -19,41 +19,63 @@ export class PlayScene extends Scene {
     );
   }
 
-  init(data) {
-    // Comes from backend /api/game/start
-    this.runId = data.runId;
-    this.seed = data.seed;
-    this.difficulty = data.difficulty;
-
-    // Init seeded RNG
-    this.rng = this.mulberry32(this.seed);
-    this.currentIndex = 0;
-  }
-
-  create() {
+  create(data) {
     this.cameras.main.setBackgroundColor(0xEDE6D1);
 
     const isMobile = /Mobi|Android/i.test(navigator.userAgent);
     const fontSize = isMobile ? 20 : 24;
     const titleSize = isMobile ? 36 : 48;
 
+    this.difficulty = data.difficulty;
     this.timeLeft = [90, 120, 150][this.difficulty] || 90;
+
     this.streak = 1.0;
     this.score = 0;
     this.mistakes = 0;
 
-    // UI
+    // Score, mistakes, timer
     this.scoreText = this.add.bitmapText(10, 10, "ari", "Score: 0", fontSize);
-    this.mistakesText = this.add.bitmapText(10, 40, "ari", "Mistakes: 0", fontSize);
-    this.timerText = this.add.bitmapText(10, 70, "ari", "Time: " + this.timeLeft, fontSize);
+    this.mistakesText = this.add.bitmapText(
+      10,
+      40,
+      "ari",
+      "Mistakes: 0",
+      fontSize
+    );
+    this.timerText = this.add.bitmapText(
+      10,
+      70,
+      "ari",
+      "Time: " + this.timeLeft,
+      fontSize
+    );
 
-    // First date
-    this.currentDateString = this.generateSeededDate(this.currentIndex++);
-    this.dateText = this.add.bitmapText(this.scale.width / 2, 110, "ari", this.currentDateString, titleSize).setOrigin(0.5);
+    // Current date
+    this.currentDateString = this.generateRandomDate();
+    this.dateText = this.add
+      .bitmapText(
+        this.scale.width / 2,
+        110,
+        "ari",
+        this.currentDateString,
+        titleSize
+      )
+      .setOrigin(0.5);
 
-    this.helpText = this.add.bitmapText(this.scale.width / 2, 160, "ari", "Type or tap the weekday of the date", fontSize).setOrigin(0.5);
+    this.helpText = this.add
+      .bitmapText(
+        this.scale.width / 2,
+        160,
+        "ari",
+        "Type or tap the weekday of the date",
+        fontSize
+      )
+      .setOrigin(0.5);
 
-    this.inputText = this.add.bitmapText(this.scale.width / 2, 230, "ari", "", fontSize + 8).setOrigin(0.5);
+    // Player input
+    this.inputText = this.add
+      .bitmapText(this.scale.width / 2, 230, "ari", "", fontSize + 8)
+      .setOrigin(0.5);
     this.inputString = "";
 
     // Timer
@@ -79,46 +101,94 @@ export class PlayScene extends Scene {
       });
     }
 
-    // Weekday Buttons (same as before) ...
-    // (not rewriting fully here to save space, keep your existing button code)
+    // Hidden input for mobile (to bring up keyboard if needed)
+    this.hiddenInput = document.createElement("input");
+    this.hiddenInput.type = "text";
+    this.hiddenInput.style.position = "fixed";
+    this.hiddenInput.style.bottom = "-100px"; // offscreen
+    this.hiddenInput.style.left = "-100px";
+    this.hiddenInput.style.width = "1px";
+    this.hiddenInput.style.height = "1px";
+    this.hiddenInput.style.opacity = 0;
+    this.hiddenInput.style.pointerEvents = "none";
+
+    document.body.appendChild(this.hiddenInput);
+
+    this.hiddenInput.addEventListener("input", () => {
+      this.playerInput = this.hiddenInput.value;
+      this.inputText.setText(this.playerInput);
+      this.inputString = this.playerInput;
+    });
+
+    this.hiddenInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        this.checkAnswer();
+        this.hiddenInput.value = "";
+        this.inputString = "";
+        this.inputText.setText("");
+      }
+    });
+
+    // --- Weekday Buttons ---
+    const weekdaysEN = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+
+    const buttonYStart = isMobile ? 380 : 320;
+    const buttonSpacingY = isMobile ? 40 : 50;
+    const buttonCols = isMobile ? 2 : 4;
+    const buttonSpacingX = isMobile ? 160 : 180;
+
+    const totalRows = Math.ceil(weekdaysEN.length / buttonCols);
+
+    weekdaysEN.forEach((day, i) => {
+      const row = Math.floor(i / buttonCols);
+      const col = i % buttonCols;
+
+      // Items in this row
+      const itemsInRow =
+        row === totalRows - 1 && weekdaysEN.length % buttonCols !== 0
+          ? weekdaysEN.length % buttonCols
+          : buttonCols;
+
+      // Row width in pixels
+      const rowWidth = (itemsInRow - 1) * buttonSpacingX;
+
+      // Left offset so that row is centered
+      const startX = this.scale.width / 2 - rowWidth / 2;
+
+      const x = startX + col * buttonSpacingX;
+      const y = buttonYStart + row * buttonSpacingY;
+
+      const btn = this.add
+        .bitmapText(x, y, "PixelGame", day, fontSize)
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true })
+        .setTint(0x0000ff);
+
+      btn.on("pointerdown", () => {
+        this.inputString = day; // simulate typing
+        this.inputText.setText(day);
+        this.checkAnswer();
+      });
+
+      btn.on("pointerover", () => btn.setTint(0x00ff00));
+      btn.on("pointerout", () => btn.setTint(0x0000ff));
+    });
   }
 
-  // --- Seeded RNG (mulberry32) ---
-  mulberry32(seed) {
-    return function () {
-      let t = (seed += 0x6d2b79f5);
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-
-  // --- Generate a seeded random integer ---
-  randomInt(min, max) {
-    return Math.floor(this.rng() * (max - min + 1)) + min;
-  }
-
-  // --- Generate a date deterministically from seed+index ---
-  generateSeededDate(index) {
-    let today = new Date();
-    let year;
-
-    switch (this.difficulty) {
-      case 0: // Easy → this year
-        year = today.getFullYear();
-        break;
-      case 1: // Medium
-        year = this.randomInt(1900, 2099);
-        break;
-      case 2: // Hard
-        year = this.randomInt(1000, 2099);
-        break;
+  shutdown() {
+    if (this.hiddenInput) {
+      document.body.removeChild(this.hiddenInput);
+      this.hiddenInput = null;
     }
-
-    let month = this.randomInt(0, 11);
-    let day = this.randomInt(1, 28); // safer than 31, avoids invalid dates
-    this.currentDate = new Date(year, month, day);
-    return `${day}.${month + 1}.${year}`;
   }
 
   checkAnswer() {
@@ -157,16 +227,14 @@ export class PlayScene extends Scene {
         this.scene.start("EndScene", {
           score: this.score,
           difficulty: this.difficulty,
-          runId: this.runId,
         });
         return;
       }
     }
 
-    // Next date
     this.inputString = "";
     this.inputText.setText("");
-    this.currentDateString = this.generateSeededDate(this.currentIndex++);
+    this.currentDateString = this.generateRandomDate();
     this.dateText.setText(this.currentDateString);
   }
 
@@ -186,21 +254,56 @@ export class PlayScene extends Scene {
 
     if (this.timeLeft <= 0) {
       this.timer.remove(false);
-      this.scene.start("EndScene", {
-        score: this.score,
-        difficulty: this.difficulty,
-        runId: this.runId,
-      });
+      this.scene.start("EndScene", { score: this.score });
     }
   }
 
+  generateRandomDate() {
+    let today = new Date();
+    let year;
+
+    switch (this.difficulty) {
+      case 0:
+        year = today.getFullYear();
+        break;
+      case 1:
+        year = Phaser.Math.Between(1900, 2099);
+        break;
+      case 2:
+        year = Phaser.Math.Between(1000, 2099);
+        break;
+    }
+
+    let month = Phaser.Math.Between(0, 11);
+    let day = Phaser.Math.Between(1, 31);
+    this.currentDate = new Date(year, month, day);
+    month++;
+    return day + "." + month + "." + year;
+  }
+
   calculateDoomsdayAlgorithm(date) {
-    const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const weekdays = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
     return weekdays[date.getDay()];
   }
 
   calculateUkedag(date) {
-    const weekdays = ["Søndag", "Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag"];
+    const weekdays = [
+      "Søndag",
+      "Mandag",
+      "Tirsdag",
+      "Onsdag",
+      "Torsdag",
+      "Fredag",
+      "Lørdag",
+    ];
     return weekdays[date.getDay()];
   }
 }
