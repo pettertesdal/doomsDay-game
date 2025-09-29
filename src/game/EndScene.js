@@ -5,6 +5,7 @@ export class EndScene extends Scene {
     super({ key: "EndScene" });
     this.inputElement = null;
     this.difficulty = null;
+    const API_BASE = "https://tesdal.dev"; // or env-configurable
   }
 
   preload() {
@@ -63,11 +64,11 @@ export class EndScene extends Scene {
   // --- API helpers ---
   async postScore(name, score, difficulty) {
     try {
-      const res = await fetch("/api/leaderboard", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, score, difficulty }),
-      });
+      const res = await fetch(`${API_BASE}/api/leaderboard`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, score, difficulty }),
+  });
       if (!res.ok) throw new Error(`Failed to post score: ${res.statusText}`);
       return res.json();
     } catch (err) {
@@ -78,7 +79,7 @@ export class EndScene extends Scene {
 
   async getLeaderboard(difficulty) {
     try {
-      const res = await fetch(`/api/leaderboard?difficulty=${difficulty}`);
+      const res = await fetch(`${API_BASE}/api/leaderboard?difficulty=${difficulty}`);
       if (!res.ok) throw new Error(`Failed to fetch leaderboard: ${res.statusText}`);
       return res.json();
     } catch (err) {
