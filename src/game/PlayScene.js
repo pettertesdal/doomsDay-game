@@ -254,7 +254,7 @@ export class PlayScene extends Scene {
 
     if (this.timeLeft <= 0) {
       this.timer.remove(false);
-      this.scene.start("EndScene", { score: this.score });
+      this.scene.start("EndScene", { score: this.score, difficulty: this.difficulty });
     }
   }
 
