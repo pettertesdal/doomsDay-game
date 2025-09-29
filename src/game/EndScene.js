@@ -13,26 +13,20 @@ export class EndScene extends Scene {
       "assets/fonts/PixelGame.png",
       "assets/fonts/PixelGame.xml"
     );
+    this.load.bitmapFont("ari", "assets/fonts/ari-font.png", "assets/fonts/ari-font.xml");
   }
 
   async create(data) {
     this.cameras.main.setBackgroundColor(0xede6d1);
 
-    // Save difficulty from data (numeric: 0 = Easy, 1 = Medium, 2 = Hard)
     this.difficulty = data.difficulty;
 
     // --- Title ---
     const title = this.add
-    .bitmapText(
-      this.scale.width / 2,
-      100,
-      "PixelGame",
-      "GAME OVER!",
-      64
-    )
-    .setOrigin(0.5)
-    .setAlpha(0)
-    .setScale(4);
+      .bitmapText(this.scale.width / 2, 100, "PixelGame", "GAME OVER!", 64)
+      .setOrigin(0.5)
+      .setAlpha(0)
+      .setScale(4);
 
     this.tweens.add({
       targets: title,
@@ -44,15 +38,9 @@ export class EndScene extends Scene {
 
     // --- Score ---
     const scoreText = this.add
-    .bitmapText(
-      this.scale.width / 2,
-      200,
-      "PixelGame",
-      "Score: " + data.score,
-      32
-    )
-    .setOrigin(0.5)
-    .setAlpha(0);
+      .bitmapText(this.scale.width / 2, 200, "PixelGame", "Score: " + data.score, 32)
+      .setOrigin(0.5)
+      .setAlpha(0);
 
     this.tweens.add({
       targets: scoreText,
@@ -62,97 +50,8 @@ export class EndScene extends Scene {
       ease: "Power2",
     });
 
-    // --- Handle leaderboard ---
+    // --- Leaderboard handling ---
     await this.handleLeaderboard(data.score);
-    // --- Retry Button ---
-    const retryButton = this.add
-    .bitmapText(
-      this.scale.width / 2,
-      this.scale.height - 140, // put it above "Back to Menu"
-      "PixelGame",
-      "Retry",
-      32
-    )
-    .setOrigin(0.5)
-    .setAlpha(0)
-    .setInteractive({ useHandCursor: true });
-
-    this.tweens.add({
-      targets: retryButton,
-      alpha: 1,
-      duration: 1000,
-      delay: 2000,
-      ease: "Power2",
-    });
-
-    retryButton.on("pointerover", () => {
-      retryButton.setTint(0x00ff00);
-      this.tweens.add({
-        targets: retryButton,
-        scale: 1.2,
-        duration: 100,
-        ease: "Power1",
-      });
-    });
-
-    retryButton.on("pointerout", () => {
-      retryButton.clearTint();
-      this.tweens.add({
-        targets: retryButton,
-        scale: 1,
-        duration: 100,
-        ease: "Power1",
-      });
-    });
-
-    retryButton.on("pointerdown", () =>
-      this.scene.start("PlayScene", { difficulty: this.difficulty })
-    );
-
-    // --- Menu Button ---
-    const menuButton = this.add
-    .bitmapText(
-      this.scale.width / 2,
-      this.scale.height - 80,
-      "PixelGame",
-      "Back to Menu",
-      32
-    )
-    .setOrigin(0.5)
-    .setAlpha(0)
-    .setInteractive({ useHandCursor: true });
-
-    this.tweens.add({
-      targets: menuButton,
-      alpha: 1,
-      duration: 1000,
-      delay: 2000,
-      ease: "Power2",
-    });
-
-    menuButton.on("pointerover", () => {
-      menuButton.setTint(0x00ff00);
-      this.tweens.add({
-        targets: menuButton,
-        scale: 1.2,
-        duration: 100,
-        ease: "Power1",
-      });
-    });
-
-    menuButton.on("pointerout", () => {
-      menuButton.clearTint();
-      this.tweens.add({
-        targets: menuButton,
-        scale: 1,
-        duration: 100,
-        ease: "Power1",
-      });
-    });
-
-    menuButton.on("pointerdown", () =>
-      this.scene.start("MenuScene", { skipIntro: true })
-    );
   }
 
   // --- Difficulty label helper ---
@@ -193,33 +92,32 @@ export class EndScene extends Scene {
     let leaderboard = await this.getLeaderboard(this.difficulty);
 
     const qualifies =
-      leaderboard.length < 10 ||
-        score > leaderboard[leaderboard.length - 1].score;
+      score !== 0 && leaderboard.length < 10 || score > leaderboard[leaderboard.length - 1].score;
 
     if (qualifies) {
       this.showNameEntry(score, this.difficulty);
     } else {
       this.showLeaderboard(leaderboard, 260);
+      this.addMenuButtons(this.scale.height - 140); // safe placement
     }
   }
 
   showNameEntry(score, difficulty) {
     const promptText = this.add
-    .bitmapText(
-      this.scale.width / 2,
-      260,
-      "PixelGame",
-      "You made the leaderboard!\nEnter your name:",
-      24
-    )
-    .setOrigin(0.5);
+      .bitmapText(
+        this.scale.width / 2,
+        260,
+        "PixelGame",
+        "You made the leaderboard!\nEnter your name:",
+        24
+      )
+      .setOrigin(0.5);
 
-    // HTML input element overlay
     const input = document.createElement("input");
     input.type = "text";
     input.maxLength = 12;
 
-    // Position it
+    // Position relative to game canvas
     input.style.position = "absolute";
     input.style.left =
       this.scale.canvas.offsetLeft + this.scale.width / 2 - 100 + "px";
@@ -227,7 +125,7 @@ export class EndScene extends Scene {
     input.style.width = "200px";
     input.style.height = "40px";
 
-    // Styling for pixel look
+    // Style
     input.style.background = "#ede6d1";
     input.style.color = "black";
     input.style.border = "4px solid black";
@@ -238,8 +136,6 @@ export class EndScene extends Scene {
     input.style.fontWeight = "bold";
     input.style.imageRendering = "pixelated";
     input.style.letterSpacing = "2px";
-    input.autocomplete = "off";
-    input.spellcheck = false;
 
     document.body.appendChild(input);
     this.inputElement = input;
@@ -248,17 +144,17 @@ export class EndScene extends Scene {
     input.addEventListener("keydown", async (event) => {
       if (event.key === "Enter") {
         const playerName = input.value || "Anon";
-        const leaderboard = await this.postScore(
-          playerName,
-          score,
-          difficulty
-        );
+        const leaderboard = await this.postScore(playerName, score, difficulty);
 
         input.remove();
         this.inputElement = null;
         promptText.destroy();
 
         this.showLeaderboard(leaderboard, 260);
+
+        // Buttons appear after leaderboard
+        const lastY = 260 + 40 + leaderboard.length * 30;
+        this.addMenuButtons(lastY + 60);
       }
     });
   }
@@ -274,7 +170,7 @@ export class EndScene extends Scene {
         this.scale.width / 2,
         startY,
         "PixelGame",
-        `Leaderboard (${this.difficultyLabel()})`,
+        `Leaderboard ${this.difficultyLabel()}`,
         32
       )
       .setOrigin(0.5);
@@ -284,7 +180,7 @@ export class EndScene extends Scene {
         .bitmapText(
           this.scale.width / 2,
           startY + 40 + i * 30,
-          "PixelGame",
+          "ari",
           `${i + 1}. ${entry.name} - ${entry.score}`,
           24
         )
@@ -292,7 +188,64 @@ export class EndScene extends Scene {
     });
   }
 
-  // Cleanup input box if scene changes
+  // --- Centralized button creation ---
+  addMenuButtons(baseY) {
+    // Retry Button
+    const retryButton = this.add
+      .bitmapText(this.scale.width / 2, baseY, "PixelGame", "Retry", 32)
+      .setOrigin(0.5)
+      .setAlpha(0)
+      .setInteractive({ useHandCursor: true });
+
+    this.tweens.add({
+      targets: retryButton,
+      alpha: 1,
+      duration: 1000,
+      delay: 500,
+      ease: "Power2",
+    });
+
+    retryButton.on("pointerover", () => {
+      retryButton.setTint(0x00ff00);
+      this.tweens.add({ targets: retryButton, scale: 1.2, duration: 100 });
+    });
+    retryButton.on("pointerout", () => {
+      retryButton.clearTint();
+      this.tweens.add({ targets: retryButton, scale: 1, duration: 100 });
+    });
+    retryButton.on("pointerdown", () =>
+      this.scene.start("PlayScene", { difficulty: this.difficulty })
+    );
+
+    // Menu Button
+    const menuButton = this.add
+      .bitmapText(this.scale.width / 2, baseY + 60, "PixelGame", "Back to Menu", 32)
+      .setOrigin(0.5)
+      .setAlpha(0)
+      .setInteractive({ useHandCursor: true });
+
+    this.tweens.add({
+      targets: menuButton,
+      alpha: 1,
+      duration: 1000,
+      delay: 700,
+      ease: "Power2",
+    });
+
+    menuButton.on("pointerover", () => {
+      menuButton.setTint(0x00ff00);
+      this.tweens.add({ targets: menuButton, scale: 1.2, duration: 100 });
+    });
+    menuButton.on("pointerout", () => {
+      menuButton.clearTint();
+      this.tweens.add({ targets: menuButton, scale: 1, duration: 100 });
+    });
+    menuButton.on("pointerdown", () =>
+      this.scene.start("MenuScene", { skipIntro: true })
+    );
+  }
+
+  // --- Cleanup ---
   shutdown() {
     if (this.inputElement) {
       this.inputElement.remove();
