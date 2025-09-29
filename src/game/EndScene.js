@@ -1,20 +1,28 @@
 import { Scene } from "phaser";
 
+// 👇 define base API URL once, outside the class
+// (later you could replace this with import.meta.env.VITE_API_BASE)
+const API_BASE = "https://tesdal.dev";
+
 export class EndScene extends Scene {
   constructor() {
     super({ key: "EndScene" });
     this.inputElement = null;
     this.difficulty = null;
-    const API_BASE = "https://tesdal.dev"; // or env-configurable
   }
 
   preload() {
+    // 👉 make sure these assets are placed in `public/assets/fonts/`
     this.load.bitmapFont(
       "PixelGame",
       "assets/fonts/PixelGame.png",
       "assets/fonts/PixelGame.xml"
     );
-    this.load.bitmapFont("ari", "assets/fonts/ari-font.png", "assets/fonts/ari-font.xml");
+    this.load.bitmapFont(
+      "ari",
+      "assets/fonts/ari-font.png",
+      "assets/fonts/ari-font.xml"
+    );
   }
 
   async create(data) {
@@ -65,10 +73,10 @@ export class EndScene extends Scene {
   async postScore(name, score, difficulty) {
     try {
       const res = await fetch(`${API_BASE}/api/leaderboard`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, score, difficulty }),
-  });
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, score, difficulty }),
+      });
       if (!res.ok) throw new Error(`Failed to post score: ${res.statusText}`);
       return res.json();
     } catch (err) {
@@ -93,13 +101,15 @@ export class EndScene extends Scene {
     let leaderboard = await this.getLeaderboard(this.difficulty);
 
     const qualifies =
-      score !== 0 && leaderboard.length < 10 || score > leaderboard[leaderboard.length - 1].score;
+      score !== 0 &&
+      (leaderboard.length < 10 ||
+        score > leaderboard[leaderboard.length - 1].score);
 
     if (qualifies) {
       this.showNameEntry(score, this.difficulty);
     } else {
       this.showLeaderboard(leaderboard, 260);
-      this.addMenuButtons(this.scale.height - 140); // safe placement
+      this.addMenuButtons(this.scale.height - 140);
     }
   }
 
@@ -153,7 +163,6 @@ export class EndScene extends Scene {
 
         this.showLeaderboard(leaderboard, 260);
 
-        // Buttons appear after leaderboard
         const lastY = 260 + 40 + leaderboard.length * 30;
         this.addMenuButtons(lastY + 60);
       }
@@ -191,7 +200,6 @@ export class EndScene extends Scene {
 
   // --- Centralized button creation ---
   addMenuButtons(baseY) {
-    // Retry Button
     const retryButton = this.add
       .bitmapText(this.scale.width / 2, baseY, "PixelGame", "Retry", 32)
       .setOrigin(0.5)
@@ -218,7 +226,6 @@ export class EndScene extends Scene {
       this.scene.start("PlayScene", { difficulty: this.difficulty })
     );
 
-    // Menu Button
     const menuButton = this.add
       .bitmapText(this.scale.width / 2, baseY + 60, "PixelGame", "Back to Menu", 32)
       .setOrigin(0.5)
@@ -246,7 +253,6 @@ export class EndScene extends Scene {
     );
   }
 
-  // --- Cleanup ---
   shutdown() {
     if (this.inputElement) {
       this.inputElement.remove();
