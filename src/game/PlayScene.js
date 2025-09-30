@@ -259,27 +259,36 @@ export class PlayScene extends Scene {
   }
 
   generateRandomDate() {
-    let today = new Date();
-    let year;
+  let today = new Date();
+  let year;
 
-    switch (this.difficulty) {
-      case 0:
-        year = today.getFullYear();
-        break;
-      case 1:
-        year = Phaser.Math.Between(1900, 2099);
-        break;
-      case 2:
-        year = Phaser.Math.Between(1000, 2099);
-        break;
-    }
-
-    let month = Phaser.Math.Between(0, 11);
-    let day = Phaser.Math.Between(1, 31);
-    this.currentDate = new Date(year, month, day);
-    month++;
-    return day + "." + month + "." + year;
+  switch (this.difficulty) {
+    case 0:
+      year = today.getFullYear();
+      break;
+    case 1:
+      year = Phaser.Math.Between(1900, 2099);
+      break;
+    case 2:
+      year = Phaser.Math.Between(1000, 2099);
+      break;
   }
+
+  // pick a month between 0–11
+  let month = Phaser.Math.Between(0, 11);
+
+  // find the last day of this month in this year
+  let daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  // pick a valid day
+  let day = Phaser.Math.Between(1, daysInMonth);
+
+  this.currentDate = new Date(year, month, day);
+
+  // format: day.month.year (1-based month)
+  return `${day}.${month + 1}.${year}`;
+}
+
 
   calculateDoomsdayAlgorithm(date) {
     const weekdays = [

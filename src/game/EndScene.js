@@ -32,10 +32,10 @@ export class EndScene extends Scene {
 
     // --- Title ---
     const title = this.add
-      .bitmapText(this.scale.width / 2, 100, "PixelGame", "GAME OVER!", 64)
-      .setOrigin(0.5)
-      .setAlpha(0)
-      .setScale(4);
+    .bitmapText(this.scale.width / 2, 100, "PixelGame", "GAME OVER!", 64)
+    .setOrigin(0.5)
+    .setAlpha(0)
+    .setScale(4);
 
     this.tweens.add({
       targets: title,
@@ -47,9 +47,9 @@ export class EndScene extends Scene {
 
     // --- Score ---
     const scoreText = this.add
-      .bitmapText(this.scale.width / 2, 200, "PixelGame", "Score: " + data.score, 32)
-      .setOrigin(0.5)
-      .setAlpha(0);
+    .bitmapText(this.scale.width / 2, 200, "PixelGame", "Score: " + data.score, 32)
+    .setOrigin(0.5)
+    .setAlpha(0);
 
     this.tweens.add({
       targets: scoreText,
@@ -102,8 +102,8 @@ export class EndScene extends Scene {
 
     const qualifies =
       score !== 0 &&
-      (leaderboard.length < 10 ||
-        score > leaderboard[leaderboard.length - 1].score);
+        (leaderboard.length < 10 ||
+          score > leaderboard[leaderboard.length - 1].score);
 
     if (qualifies) {
       this.showNameEntry(score, this.difficulty);
@@ -115,14 +115,14 @@ export class EndScene extends Scene {
 
   showNameEntry(score, difficulty) {
     const promptText = this.add
-      .bitmapText(
-        this.scale.width / 2,
-        260,
-        "PixelGame",
-        "You made the leaderboard!\nEnter your name:",
-        24
-      )
-      .setOrigin(0.5);
+    .bitmapText(
+      this.scale.width / 2,
+      260,
+      "PixelGame",
+      "You made the leaderboard!\nEnter your name:",
+      24
+    )
+    .setOrigin(0.5);
 
     const input = document.createElement("input");
     input.type = "text";
@@ -201,10 +201,10 @@ export class EndScene extends Scene {
   // --- Centralized button creation ---
   addMenuButtons(baseY) {
     const retryButton = this.add
-      .bitmapText(this.scale.width / 2, baseY, "PixelGame", "Retry", 32)
-      .setOrigin(0.5)
-      .setAlpha(0)
-      .setInteractive({ useHandCursor: true });
+    .bitmapText(this.scale.width / 2, baseY, "PixelGame", "Retry", 32)
+    .setOrigin(0.5)
+    .setAlpha(0)
+    .setInteractive({ useHandCursor: true });
 
     this.tweens.add({
       targets: retryButton,
@@ -227,10 +227,10 @@ export class EndScene extends Scene {
     );
 
     const menuButton = this.add
-      .bitmapText(this.scale.width / 2, baseY + 60, "PixelGame", "Back to Menu", 32)
-      .setOrigin(0.5)
-      .setAlpha(0)
-      .setInteractive({ useHandCursor: true });
+    .bitmapText(this.scale.width / 2, baseY + 60, "PixelGame", "Back to Menu", 32)
+    .setOrigin(0.5)
+    .setAlpha(0)
+    .setInteractive({ useHandCursor: true });
 
     this.tweens.add({
       targets: menuButton,
