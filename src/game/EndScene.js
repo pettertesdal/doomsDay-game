@@ -114,7 +114,7 @@ export class EndScene extends Scene {
   }
 
   showNameEntry(score, difficulty) {
-    const promptText = this.add
+  const promptText = this.add
     .bitmapText(
       this.scale.width / 2,
       260,
@@ -124,50 +124,67 @@ export class EndScene extends Scene {
     )
     .setOrigin(0.5);
 
-    const input = document.createElement("input");
-    input.type = "text";
-    input.maxLength = 12;
+  const input = document.createElement("input");
+  input.type = "text";
+  input.maxLength = 12;
 
-    // Position relative to game canvas
-    input.style.position = "absolute";
-    input.style.left =
-      this.scale.canvas.offsetLeft + this.scale.width / 2 - 100 + "px";
-    input.style.top = this.scale.canvas.offsetTop + 300 + "px";
-    input.style.width = "200px";
-    input.style.height = "40px";
+  // Position relative to game canvas
+  input.style.position = "absolute";
+  input.style.left =
+    this.scale.canvas.offsetLeft + this.scale.width / 2 - 100 + "px";
+  input.style.top = this.scale.canvas.offsetTop + 300 + "px";
+  input.style.width = "200px";
+  input.style.height = "40px";
 
-    // Style
-    input.style.background = "#ede6d1";
-    input.style.color = "black";
-    input.style.border = "4px solid black";
-    input.style.outline = "none";
-    input.style.textAlign = "center";
-    input.style.fontSize = "24px";
-    input.style.fontFamily = "PixelGame, monospace";
-    input.style.fontWeight = "bold";
-    input.style.imageRendering = "pixelated";
-    input.style.letterSpacing = "2px";
+  // Style
+  input.style.background = "#ede6d1";
+  input.style.color = "black";
+  input.style.border = "4px solid black";
+  input.style.outline = "none";
+  input.style.textAlign = "center";
+  input.style.fontSize = "24px";
+  input.style.fontFamily = "PixelGame, monospace";
+  input.style.fontWeight = "bold";
+  input.style.imageRendering = "pixelated";
+  input.style.letterSpacing = "2px";
 
-    document.body.appendChild(input);
-    this.inputElement = input;
-    input.focus();
+  document.body.appendChild(input);
+  this.inputElement = input;
+  input.focus();
 
-    input.addEventListener("keydown", async (event) => {
-      if (event.key === "Enter") {
-        const playerName = input.value || "Anon";
-        const leaderboard = await this.postScore(playerName, score, difficulty);
+  input.addEventListener("keydown", async (event) => {
+    if (event.key === "Enter") {
+      const playerName = input.value || "Anon";
 
-        input.remove();
-        this.inputElement = null;
-        promptText.destroy();
+      // 👉 Fetch current leaderboard
+      let leaderboard = await this.getLeaderboard(difficulty);
 
-        this.showLeaderboard(leaderboard, 260);
+      // 👉 See if player already exists
+      const existing = leaderboard.find(e => e.name === playerName);
 
-        const lastY = 260 + 40 + leaderboard.length * 30;
-        this.addMenuButtons(lastY + 60);
+      if (existing) {
+        if (score > existing.score) {
+          // replace with new higher score
+          leaderboard = await this.postScore(playerName, score, difficulty);
+        }
+        // else: keep old score, do not post
+      } else {
+        // brand new player → post score
+        leaderboard = await this.postScore(playerName, score, difficulty);
       }
-    });
-  }
+
+      input.remove();
+      this.inputElement = null;
+      promptText.destroy();
+
+      this.showLeaderboard(leaderboard, 260);
+
+      const lastY = 260 + 40 + leaderboard.length * 30;
+      this.addMenuButtons(lastY + 60);
+    }
+  });
+}
+
 
   showLeaderboard(leaderboard, startY) {
     if (!Array.isArray(leaderboard)) {
