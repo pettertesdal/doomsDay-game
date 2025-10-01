@@ -1,4 +1,5 @@
 import { Scene } from "phaser";
+import { createCheatSheet } from "./CheatSheet.js";
 
 export class TutorialDoomsday extends Scene {
   constructor() {
@@ -40,10 +41,10 @@ export class TutorialDoomsday extends Scene {
     this.cameras.main.setBackgroundColor(0xede6d1);
 
     const title = this.add
-      .bitmapText(this.scale.width / 2, 50, "PixelGame", "DOOMSDAY TUTORIAL", this.isMobile ? 40 : 64)
-      .setOrigin(0.5)
-      .setAlpha(0)
-      .setScale(3);
+    .bitmapText(this.scale.width / 2, 50, "PixelGame", "DOOMSDAY TUTORIAL", this.isMobile ? 40 : 64)
+    .setOrigin(0.5)
+    .setAlpha(0)
+    .setScale(3);
 
     this.tweens.add({ targets: title, alpha: 1, scale: 1, duration: 1200, ease: "Back.Out" });
 
@@ -60,24 +61,34 @@ export class TutorialDoomsday extends Scene {
     const instructionFontSize = this.isMobile ? 18 : 28;
     const feedbackFontSize = this.isMobile ? 20 : 28;
 
-    this.instructionText = this.add.bitmapText(50, 150, "ari", "", instructionFontSize);
+    this.instructionText = this.add.bitmapText(
+  this.isMobile ? 50 : this.scale.width / 2,
+  150,
+  "ari",
+  "",
+  instructionFontSize
+).setOrigin(this.isMobile ? 0 : 0.5, 0);
+
+
+    // Desktop inputText (hidden on mobile)
     this.inputText = this.add.bitmapText(this.scale.width / 2, 220, "ari", "", this.isMobile ? 0 : 32).setOrigin(0.5);
+
     this.feedbackText = this.add.bitmapText(this.scale.width / 2, 270, "ari", "", feedbackFontSize).setOrigin(0.5);
 
     this.calcText = this.add.bitmapText(this.scale.width / 2, 370, "ari", "", this.isMobile ? 18 : 24).setOrigin(0.5);
 
-    this.createCheatSheet();
+    // ✅ Cheat sheet panel with arrow
+    this.cheatUI = createCheatSheet(this, this.isMobile);
+
     this.createSteps();
-    this.showStep();
 
     if (this.isMobile) {
-      // Proper visible input field
+      // Proper visible input field (HTML)
       this.inputElement = document.createElement("input");
       this.inputElement.type = "text";
       this.inputElement.maxLength = 20;
       this.inputElement.style.position = "absolute";
       this.inputElement.style.left = this.scale.canvas.offsetLeft + this.scale.width / 2 - 100 + "px";
-      this.inputElement.style.top = this.scale.canvas.offsetTop + 200 + "px";
       this.inputElement.style.width = "200px";
       this.inputElement.style.height = "40px";
       this.inputElement.style.background = "#ede6d1";
@@ -122,6 +133,7 @@ export class TutorialDoomsday extends Scene {
       this.input.keyboard.on("keydown", this.keyHandler);
     }
 
+    // ✅ Define menuButton BEFORE showStep
     this.menuButton = this.add
       .bitmapText(this.scale.width / 2, this.isMobile ? 460 : 500, "PixelGame", "Back", this.isMobile ? 24 : 32)
       .setOrigin(0.5)
@@ -135,7 +147,24 @@ export class TutorialDoomsday extends Scene {
         exampleYear: this.exampleYear,
       })
     );
+
+    // ✅ Now it’s safe
+    this.showStep();
+
+    this.events.on("shutdown", this.cleanupInput, this);
+    this.events.on("destroy", this.cleanupInput, this);
   }
+  cleanupInput() {
+    if (this.inputElement) {
+      this.inputElement.remove();
+      this.inputElement = null;
+    }
+    if (this.keyHandler) {
+      this.input.keyboard.off("keydown", this.keyHandler);
+      this.keyHandler = null;
+    }
+  }
+
 
   shutdown() {
     if (this.inputElement) {
@@ -183,7 +212,7 @@ export class TutorialDoomsday extends Scene {
       },
       { text: () => `Step 6: Reduce the total by 7 as many times as you can, and write what is remaining.`,
         check: () => this.playerInput === String(this.doomsday),
-        success: "✅ Yes! You have the number, but what day is it?",
+        success: "✅ Yes!",
         onSuccess: (val) => (this.calculationParts[5] = val),
       },
       { text: () => `Step 7: Which weekday is ${this.doomsday}?`,
@@ -191,7 +220,7 @@ export class TutorialDoomsday extends Scene {
           const input = this.playerInput.trim().toLowerCase();
           return input === this.weekday || input === this.ukedag;
         },
-        success: `✅ Correct! ${this.weekday} is the doomsday of year ${this.exampleYear}!`,
+        success: `✅ Correct! ${this.weekday}!`,
         onSuccess: (val) => (this.finalWeekday = val),
       }
     ];
@@ -207,6 +236,20 @@ export class TutorialDoomsday extends Scene {
     const maxChars = this.isMobile ? 22 : 35;
     const wrapped = stepText.replace(new RegExp(`(.{1,${maxChars}})(\\s|$)`, "g"), "$1\n");
     this.instructionText.setText(wrapped);
+
+    const instrBounds = this.instructionText.getBounds();
+
+    if (this.isMobile && this.inputElement) {
+      this.inputElement.style.top = this.scale.canvas.offsetTop + instrBounds.bottom + 20 + "px";
+      this.feedbackText.setY(instrBounds.bottom + 100);
+      this.calcText.setY(instrBounds.bottom + 160);
+      this.menuButton.setY(instrBounds.bottom + 220);
+    } else {
+      this.inputText.setY(instrBounds.bottom + 50);
+      this.feedbackText.setY(instrBounds.bottom + 100);
+      this.calcText.setY(instrBounds.bottom + 160);
+      this.menuButton.setY(instrBounds.bottom + 220);
+    }
   }
 
   checkStep() {
@@ -231,21 +274,6 @@ export class TutorialDoomsday extends Scene {
       if (!this.isMobile) this.inputText.setText("");
       if (this.isMobile && this.inputElement) this.inputElement.value = "";
     }
-  }
-
-  createCheatSheet() {
-    const panelWidth = 320;
-    this.cheatPanel = this.add.container(this.scale.width, 80);
-
-    const bg = this.add.graphics();
-    bg.fillStyle(0xffffcc, 1);
-    bg.fillRoundedRect(0, 0, panelWidth, 460, 10);
-    this.cheatPanel.add(bg);
-
-    this.cheatPanel.add(this.add.bitmapText(15, 15, "ari",
-      "Month Doomsdays\nJan: 3/4* Jul:11\nFeb:28/29* Aug: 8\nMar:14 Sep: 5\nApr: 4 Oct:10\nMay: 9 Nov: 7\nJun: 6 Dec:12",
-      this.isMobile ? 14 : 18
-    ));
   }
 }
 

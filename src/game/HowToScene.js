@@ -58,6 +58,9 @@ export class HowToScene extends Scene {
       "what day a specific date is.",
       "Check the cheatsheet for info on specific dates",
       "Century Anchor: the number you add, depending on what century you are in",
+      "",
+      "Start by finding doomsday, in the doomsday tutorial",
+      "Then find the weekday for that month",
     ];
 
     let startY = 120;
@@ -98,7 +101,7 @@ export class HowToScene extends Scene {
 
     // --- Buttons ---
     const buttonY = startY + instructions.length * lineHeight + 100;
-    this.makeButton(this.scale.width / 2, buttonY, "Step-by-Step Tutorial", () => {
+    this.makeButton(this.scale.width / 2, buttonY, "Find Doomsday tutorial", () => {
       this.scene.start('TutorialDoomsday', {
         exampleDay: this.exampleDay,
         exampleMonth: this.exampleMonth,

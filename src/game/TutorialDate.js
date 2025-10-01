@@ -1,4 +1,5 @@
 import { Scene } from "phaser";
+import { createCheatSheet } from "./CheatSheet.js";
 
 export class TutorialDate extends Scene {
   constructor() {
@@ -17,8 +18,6 @@ export class TutorialDate extends Scene {
 
     this.currentStep = 0;
     this.calculationParts = [];
-    this.finalWeekday = undefined;
-    this.finalUkedag = undefined;
     this.playerInput = "";
     this.isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
@@ -75,15 +74,24 @@ export class TutorialDate extends Scene {
       .setOrigin(0.5);
 
     this.instructionText = this.add.bitmapText(20, 140, "ari", "", instrFont);
+    this.instructionText = this.add.bitmapText(
+  this.isMobile ? 50 : this.scale.width / 2,
+  150,
+  "ari",
+  "",
+  instrFont
+).setOrigin(this.isMobile ? 0 : 0.5, 0);
+
     this.inputText = this.add.bitmapText(this.scale.width / 2, 200, "ari", "", this.isMobile ? 0 : 32).setOrigin(0.5);
     this.feedbackText = this.add.bitmapText(this.scale.width / 2, 240, "ari", "", feedbackFont).setOrigin(0.5);
 
     this.calcText = this.add.bitmapText(this.scale.width / 2, 320, "ari", "", calcFont).setOrigin(0.5);
     this.calcDayText = this.add.bitmapText(this.scale.width / 2, 350, "ari", "", calcFont).setOrigin(0.5);
 
-    this.createCheatSheet();
+    // ✅ Cheat sheet (with arrow, input hide/show)
+    this.cheatUI = createCheatSheet(this, this.isMobile);
+
     this.createSteps();
-    this.showStep();
 
     if (this.isMobile) {
       // Visible input field
@@ -92,7 +100,6 @@ export class TutorialDate extends Scene {
       this.inputElement.maxLength = 20;
       this.inputElement.style.position = "absolute";
       this.inputElement.style.left = this.scale.canvas.offsetLeft + this.scale.width / 2 - 100 + "px";
-      this.inputElement.style.top = this.scale.canvas.offsetTop + 180 + "px";
       this.inputElement.style.width = "200px";
       this.inputElement.style.height = "40px";
       this.inputElement.style.background = "#ede6d1";
@@ -143,16 +150,24 @@ export class TutorialDate extends Scene {
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true })
       .setAlpha(0);
-    this.menuButton.on("pointerdown", () =>
+    this.menuButton.on("pointerdown", () => {
+      this.cleanupInput();
       this.scene.start("HowToScene", {
         exampleDay: this.exampleDay,
         exampleMonth: this.exampleMonth,
         exampleYear: this.exampleYear,
-      })
-    );
+      });
+    });
+
+    // ✅ Now safe to show the first step
+    this.showStep();
+
+    // Cleanup on stop/destroy
+    this.events.on("shutdown", this.cleanupInput, this);
+    this.events.on("destroy", this.cleanupInput, this);
   }
 
-  shutdown() {
+  cleanupInput() {
     if (this.inputElement) {
       this.inputElement.remove();
       this.inputElement = null;
@@ -210,7 +225,27 @@ export class TutorialDate extends Scene {
     const step = this.steps[this.currentStep];
     this.playerInput = "";
     this.inputText.setText("");
-    this.instructionText.setText(typeof step.text === "function" ? step.text() : step.text);
+
+    const stepText = typeof step.text === "function" ? step.text() : step.text;
+    const maxChars = this.isMobile ? 22 : 35;
+    const wrapped = stepText.replace(new RegExp(`(.{1,${maxChars}})(\\s|$)`, "g"), "$1\n");
+    this.instructionText.setText(wrapped);
+
+    const instrBounds = this.instructionText.getBounds();
+
+    if (this.isMobile && this.inputElement) {
+      this.inputElement.style.top = this.scale.canvas.offsetTop + instrBounds.bottom + 20 + "px";
+      this.feedbackText.setY(instrBounds.bottom + 80);
+      this.calcText.setY(instrBounds.bottom + 140);
+      this.calcDayText.setY(instrBounds.bottom + 170);
+      this.menuButton.setY(instrBounds.bottom + 230);
+    } else {
+      this.inputText.setY(instrBounds.bottom + 50);
+      this.feedbackText.setY(instrBounds.bottom + 100);
+      this.calcText.setY(instrBounds.bottom + 160);
+      this.calcDayText.setY(instrBounds.bottom + 190);
+      this.menuButton.setY(instrBounds.bottom + 250);
+    }
   }
 
   checkStep() {
@@ -237,76 +272,6 @@ export class TutorialDate extends Scene {
       if (!this.isMobile) this.inputText.setText("");
       if (this.isMobile && this.inputElement) this.inputElement.value = "";
     }
-  }
-
-  // Cheat sheet
-  createCheatSheet() {
-    const panelWidth = 320;
-    const panelHeight = 460;
-
-    this.cheatPanel = this.add.container(this.scale.width, 80);
-
-    const bg = this.add.graphics();
-    bg.fillStyle(0xffffcc, 1);
-    bg.fillRoundedRect(0, 0, panelWidth, panelHeight, 10);
-    this.cheatPanel.add(bg);
-
-    const monthText =
-      "Month Doomsdays\nJan: 3/4*   Jul:11\nFeb:28/29*  Aug: 8\nMar:14       Sep: 5\nApr: 4       Oct:10\nMay: 9       Nov: 7\nJun: 6       Dec:12";
-    this.cheatPanel.add(this.add.bitmapText(15, 15, "ari", monthText, 18));
-
-    const leapText =
-      "* Leap Year Rule:\nDivisible by 4 → Leap Year\nBut divisible by 100 → NOT\nExcept divisible by 400 → Leap\n\nEffect: Jan=4, Feb=29";
-    this.cheatPanel.add(this.add.bitmapText(15, 160, "ari", leapText, 16));
-
-    const anchorText = "Century Anchors\n1900s → 3 (Wed)\n2000s → 2 (Tue)\n2100s → 0 (Sun)";
-    this.cheatPanel.add(this.add.bitmapText(15, 270, "ari", anchorText, 18));
-
-    const weekdayText =
-      "Weekday Numbers\n0 = Sun   1 = Mon\n2 = Tue   3 = Wed\n4 = Thu   5 = Fri\n6 = Sat";
-    this.cheatPanel.add(this.add.bitmapText(15, 360, "ari", weekdayText, 18));
-
-    const closeBtn = this.add
-      .bitmapText(panelWidth - 25, 10, "ari", "X", 20)
-      .setOrigin(0.5, 0)
-      .setTint(0xaa0000)
-      .setInteractive({ useHandCursor: true });
-    closeBtn.on("pointerdown", () => {
-      this.tweens.add({ targets: this.cheatPanel, x: this.scale.width, duration: 300, ease: "Power2" });
-      this.arrow.setVisible(true);
-      this.cheatLabel.setVisible(true);
-    });
-    this.cheatPanel.add(closeBtn);
-
-    const arrowX = this.scale.width - 50;
-    const arrowY = 200;
-    this.arrow = this.add.graphics();
-    this.arrow.fillStyle(0x333333, 1);
-    this.arrow.beginPath();
-    this.arrow.moveTo(0, -20);
-    this.arrow.lineTo(0, 20);
-    this.arrow.lineTo(30, 0);
-    this.arrow.closePath();
-    this.arrow.fillPath();
-    this.arrow.setPosition(arrowX, arrowY);
-    this.arrow.setAngle(-10);
-
-    this.cheatLabel = this.add
-      .bitmapText(arrowX - 40, arrowY, "PixelGame", "CHEAT SHEET", 24)
-      .setOrigin(1, 0.5)
-      .setAngle(-15);
-
-    this.arrow.setInteractive(new Phaser.Geom.Polygon([0, -20, 0, 20, 30, 0]), Phaser.Geom.Polygon.Contains);
-    this.arrow.on("pointerdown", () => {
-      this.arrow.setVisible(false);
-      this.cheatLabel.setVisible(false);
-      this.tweens.add({
-        targets: this.cheatPanel,
-        x: this.scale.width - panelWidth - 10,
-        duration: 300,
-        ease: "Power2",
-      });
-    });
   }
 }
 
